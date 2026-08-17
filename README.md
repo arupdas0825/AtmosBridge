@@ -12,7 +12,7 @@
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
 ![AI](https://img.shields.io/badge/AI-Google%20Gemini-8E75FF)
 
-[Live Demo](#) · [Demo Video](#) · [Pitch Deck](#) · [Documentation](./docs)
+[Live Demo](https://atmosbridgeai.vercel.app/) · [Demo Video](#) · [Pitch Deck](#) · [Documentation](./docs)
 
 </div>
 
