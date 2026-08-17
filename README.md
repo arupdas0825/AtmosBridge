@@ -1,6 +1,7 @@
 <div align="center">
+<img width="120" height="120" alt="logo" src="https://github.com/user-attachments/assets/c894a42f-20ec-4f29-99ea-0984f921ed75" />
 
-# 🌍 AtmosBridge
+# AtmosBridge
 
 **Federated AI Climate-Intelligence Platform for Hyperlocal & Cross-Border Pollution Detection**
 
