@@ -1,4 +1,12 @@
 import os
+import sys
+
+# Ensure project root is on sys.path so 'from backend.xxx import ...' resolves
+# correctly when Vercel executes with root: "backend" (cwd = backend/).
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
