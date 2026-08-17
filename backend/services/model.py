@@ -9,17 +9,6 @@ class SpikePredictor:
     def __init__(self):
         self.model_path = settings.MODEL_PATH
         self.model = None
-        self._load_model()
-
-    def _load_model(self):
-        if self.model_path.exists():
-            try:
-                import xgboost as xgb
-                self.model = xgb.XGBRegressor()
-                self.model.load_model(str(self.model_path))
-            except Exception as e:
-                print(f"[SpikePredictor] Could not load XGBoost model: {e}. Using heuristic engine.")
-                self.model = None
 
     def predict(
         self,

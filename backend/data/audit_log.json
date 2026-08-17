@@ -1,5 +1,14 @@
 [
   {
+    "alert_id": "alt_f8d72e",
+    "hotspot_id": "hotspot_ind_delhi_01",
+    "action": "acknowledge",
+    "actor": "Inspector Verma (Delhi CPCB)",
+    "timestamp": "2026-08-17T13:23:37.762617+00:00",
+    "notes": "Field team dispatched.",
+    "id": "log_d4499e2f"
+  },
+  {
     "alert_id": "alt_2ee0af",
     "hotspot_id": "hotspot_ind_delhi_01",
     "action": "acknowledge",

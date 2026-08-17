@@ -1,0 +1,38 @@
+# AtmosBridge Vercel Deployment Ignore File
+# Exclude non-production assets, node_modules, virtualenvs, docs and scripts
+
+# Git & IDE
+.git/
+.github/
+.vscode/
+.idea/
+
+# Node.js / Frontend local build artifacts
+node_modules/
+frontend/node_modules/
+.npm/
+
+# Offline Documentation, Plans & Training Scripts
+docs/
+plans/
+scripts/
+
+# Python Virtual Environments & Pycache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local logs & ephemeral uploads
+*.log
+*.tmp
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep
