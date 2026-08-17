@@ -26,7 +26,7 @@ async def create_report(
     photo: Optional[UploadFile] = File(None)
 ):
     # 1. Rate Limiting Check
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    client_ip = request.client.host if (request and request.client) else "127.0.0.1"
     now = time.time()
     if client_ip in ip_rate_limits:
         timestamps = [t for t in ip_rate_limits[client_ip] if now - t < 60]
@@ -60,13 +60,18 @@ async def create_report(
             raise HTTPException(status_code=400, detail="Image file exceeds 5MB size limit.")
 
         image_mime_type = photo.content_type
-        # Save image locally
+        # Save image locally (with base64 data URI fallback for read-only serverless platforms)
         file_ext = os.path.splitext(photo.filename)[1] or ".jpg"
         saved_filename = f"{uuid.uuid4().hex}{file_ext}"
-        saved_path = settings.UPLOADS_DIR / saved_filename
-        with open(saved_path, "wb") as f:
-            f.write(image_bytes)
-        photo_url = f"/static/uploads/{saved_filename}"
+        try:
+            saved_path = settings.UPLOADS_DIR / saved_filename
+            with open(saved_path, "wb") as f:
+                f.write(image_bytes)
+            photo_url = f"/static/uploads/{saved_filename}"
+        except Exception:
+            import base64
+            b64_str = base64.b64encode(image_bytes).decode("utf-8")
+            photo_url = f"data:{image_mime_type};base64,{b64_str}"
 
     # 4. Trigger Server-Side Gemini Multimodal Analysis
     analysis_dict = gemini_service.analyze_report(

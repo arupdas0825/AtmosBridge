@@ -7,7 +7,7 @@
     "latitude": 28.5355,
     "longitude": 77.269,
     "severity": 4,
-    "severity_label": "critical",
+    "severity_label": "high",
     "risk_score": 89.5,
     "status": "active",
     "pollutants": {
@@ -41,9 +41,9 @@
     },
     "affected_population_estimate": 58000,
     "cross_border_risk": false,
-    "reports_count": 9,
-    "last_updated": "2026-08-17T09:58:26.458669+00:00",
-    "summary": "Heavy unpermitted rubber and waste combustion confirmed by 9 visual citizen sightings and sharp PM2.5 spike to 248 \u00b5g/m\u00b3. Low wind speed prevents horizontal ventilation.",
+    "reports_count": 11,
+    "last_updated": "2026-08-17T13:16:17.296762+00:00",
+    "summary": "Citizen sighting confirms unpermitted industrial chimney discharge & boiler combustion. Current wind conditions (4.0 km/h from 95\u00b0) indicate limited atmospheric dispersion, amplifying localized risk on top of ambient PM2.5 levels (252.0 \u00b5g/m\u00b3). Immediate human-supervised verification recommended.",
     "satellite_aerosol_index": {
       "value": 0.88,
       "unit": "AOD index",
@@ -51,7 +51,9 @@
     },
     "contributing_report_ids": [
       "rep_seed_01",
-      "rep_seed_02"
+      "rep_seed_02",
+      "rep_fa9c5b21",
+      "rep_2b1d2e1a"
     ]
   },
   {

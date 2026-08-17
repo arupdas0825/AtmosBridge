@@ -1,5 +1,23 @@
 [
   {
+    "alert_id": "alt_2ee0af",
+    "hotspot_id": "hotspot_ind_delhi_01",
+    "action": "acknowledge",
+    "actor": "Inspector Verma (Delhi CPCB)",
+    "timestamp": "2026-08-17T13:16:17.391270+00:00",
+    "notes": "Field team dispatched.",
+    "id": "log_5319007f"
+  },
+  {
+    "alert_id": "alt_424bd0",
+    "hotspot_id": "hotspot_ind_delhi_01",
+    "action": "acknowledge",
+    "actor": "Inspector Verma (Delhi CPCB)",
+    "timestamp": "2026-08-17T13:15:09.067645+00:00",
+    "notes": "Field team dispatched.",
+    "id": "log_576786ee"
+  },
+  {
     "id": "log_init_01",
     "alert_id": "alt_punjab_8813",
     "action": "acknowledge",

@@ -39,7 +39,11 @@ class Settings:
 
 settings = Settings()
 
-# Ensure directories exist
-settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
-settings.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-(settings.BASE_DIR / "models").mkdir(parents=True, exist_ok=True)
+# Ensure directories exist (safely caught for read-only serverless environments)
+try:
+    settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    settings.UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    (settings.BASE_DIR / "models").mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
+

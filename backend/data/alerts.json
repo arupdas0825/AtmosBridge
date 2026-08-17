@@ -1,5 +1,55 @@
 [
   {
+    "id": "alt_2ee0af",
+    "hotspot_id": "hotspot_ind_delhi_01",
+    "title": "High-Confidence Industrial Smoke Alert \u2014 Noida Sector 62 Industrial Belt",
+    "severity": "high",
+    "risk_score": 87.5,
+    "status": "acknowledged",
+    "created_at": "2026-08-17T13:16:17.295792+00:00",
+    "affected_population": 348421,
+    "gemini_summary": "Citizen sighting confirms unpermitted industrial chimney discharge & boiler combustion. Current wind conditions (4.0 km/h from 95\u00b0) indicate limited atmospheric dispersion, amplifying localized risk on top of ambient PM2.5 levels (252.0 \u00b5g/m\u00b3). Immediate human-supervised verification recommended.",
+    "recommended_intervention": "\u2022 Dispatch municipal environmental inspector to industrial quadrant\n\u2022 Verify factory continuous emission monitoring (CEMS) log\n\u2022 Cross-reference nearest industrial zone sensor",
+    "action_log": [
+      {
+        "action": "acknowledge",
+        "actor": "Inspector Verma (Delhi CPCB)",
+        "timestamp": "2026-08-17T13:16:17.391270+00:00",
+        "notes": "Field team dispatched."
+      }
+    ],
+    "location_name": "Noida Sector 62 Industrial Belt",
+    "country": "India",
+    "latitude": 28.5355,
+    "longitude": 77.269,
+    "evidence_photo_url": null
+  },
+  {
+    "id": "alt_424bd0",
+    "hotspot_id": "hotspot_ind_delhi_01",
+    "title": "High-Confidence Industrial Smoke Alert \u2014 Noida Sector 62 Industrial Belt",
+    "severity": "high",
+    "risk_score": 87.5,
+    "status": "acknowledged",
+    "created_at": "2026-08-17T13:15:08.948053+00:00",
+    "affected_population": 348421,
+    "gemini_summary": "Citizen sighting confirms unpermitted industrial chimney discharge & boiler combustion. Current wind conditions (4.0 km/h from 95\u00b0) indicate limited atmospheric dispersion, amplifying localized risk on top of ambient PM2.5 levels (252.0 \u00b5g/m\u00b3). Immediate human-supervised verification recommended.",
+    "recommended_intervention": "\u2022 Dispatch municipal environmental inspector to industrial quadrant\n\u2022 Verify factory continuous emission monitoring (CEMS) log\n\u2022 Cross-reference nearest industrial zone sensor",
+    "action_log": [
+      {
+        "action": "acknowledge",
+        "actor": "Inspector Verma (Delhi CPCB)",
+        "timestamp": "2026-08-17T13:15:09.067645+00:00",
+        "notes": "Field team dispatched."
+      }
+    ],
+    "location_name": "Noida Sector 62 Industrial Belt",
+    "country": "India",
+    "latitude": 28.5355,
+    "longitude": 77.269,
+    "evidence_photo_url": null
+  },
+  {
     "id": "alt_delhi_8812",
     "hotspot_id": "hotspot_ind_delhi_01",
     "title": "Critical Industrial Discharge \u2014 Okhla Phase II",
