@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from backend.config import settings
+
+# Vercel sets this env var automatically on all serverless deployments
+_SERVERLESS = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
 from backend.routers import (
     reports,
     hotspots,
@@ -30,10 +33,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files for photo uploads
-uploads_dir = settings.UPLOADS_DIR
-uploads_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+# Mount static files for photo uploads — disabled on Vercel (read-only filesystem)
+# Works normally for local dev and Docker/Cloud Run deployments
+if not _SERVERLESS:
+    uploads_dir = settings.UPLOADS_DIR
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/static/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
 
 # Mount API Routers
 app.include_router(reports.router, prefix="/api")

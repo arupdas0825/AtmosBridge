@@ -1,27 +1,58 @@
 import json
 import os
 import uuid
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from backend.config import settings
 
+# Vercel serverless: filesystem is read-only except /tmp.
+# Detect serverless environment via the VERCEL env var (set automatically by Vercel).
+_SERVERLESS = bool(os.getenv("VERCEL") or os.getenv("VERCEL_ENV"))
+_TMP_DATA_DIR = Path("/tmp/atmosbridge_data")
+
 class StorageService:
     def __init__(self):
-        self.data_dir = settings.DATA_DIR
-        self.reports_file = self.data_dir / "reports.json"
-        self.hotspots_file = self.data_dir / "hotspots.json"
-        self.alerts_file = self.data_dir / "alerts.json"
-        self.crossborder_file = self.data_dir / "crossborder.json"
-        self.sensors_file = self.data_dir / "sensors.json"
-        self.audit_log_file = self.data_dir / "audit_log.json"
-        self.satellite_file = self.data_dir / "satellite.json"
+        self.data_dir = settings.DATA_DIR  # Bundle data dir (seeded, always readable)
 
-        # Initialize files if missing
+        if _SERVERLESS:
+            # On Vercel, writes must go to /tmp. Copy seeded data there on cold start.
+            self.writable_dir = _TMP_DATA_DIR
+            self.writable_dir.mkdir(parents=True, exist_ok=True)
+            self._copy_bundle_to_tmp()
+        else:
+            self.writable_dir = self.data_dir
+
+        # All file references point to the writable directory
+        self.reports_file = self.writable_dir / "reports.json"
+        self.hotspots_file = self.writable_dir / "hotspots.json"
+        self.alerts_file = self.writable_dir / "alerts.json"
+        self.crossborder_file = self.writable_dir / "crossborder.json"
+        self.sensors_file = self.writable_dir / "sensors.json"
+        self.audit_log_file = self.writable_dir / "audit_log.json"
+        self.satellite_file = self.writable_dir / "satellite.json"
+
+        # Ensure all files exist (creates empty arrays if missing)
         self._init_storage()
 
+    def _copy_bundle_to_tmp(self):
+        """Copy seeded bundle data files to /tmp on serverless cold start.
+        This runs once per Lambda instance. Subsequent warm invocations skip files
+        that are already in /tmp (including any new data written during the session).
+        """
+        bundle_files = [
+            "reports.json", "hotspots.json", "alerts.json",
+            "crossborder.json", "sensors.json", "audit_log.json", "satellite.json"
+        ]
+        for fname in bundle_files:
+            src = self.data_dir / fname
+            dst = self.writable_dir / fname
+            if src.exists() and not dst.exists():
+                shutil.copy2(str(src), str(dst))
+
     def _init_storage(self):
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.writable_dir.mkdir(parents=True, exist_ok=True)
         for f in [
             self.reports_file,
             self.hotspots_file,
