@@ -1,0 +1,106 @@
+# ==============================================================================
+# AtmosBridge — Comprehensive Security & Repository .gitignore
+# ==============================================================================
+
+# 1. Environment & Secret Configuration (CRITICAL)
+.env
+.env.*
+!.env.example
+*.env
+*.env.local
+*.env.*.local
+
+# 2. Certificates, Keys & Private Credentials (CRITICAL)
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.cert
+*.der
+*.csr
+service-account*.json
+*-service-account.json
+credentials.json
+credentials*.json
+secrets/
+private/
+
+# 3. Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 4. Node.js & Frontend Build Outputs
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+dist-ssr/
+frontend/dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.turbo/
+
+# 8. Pre-commit hook generated cache
+.pre-commit-cache/
+
+# 5. Local Uploads & Ephemeral State
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep
+*.sqlite
+*.sqlite3
+*.db
+*.log
+
+# 6. Operating System Artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# 7. IDE & Editor Artifacts
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+.project
+.settings/
+.fleet/

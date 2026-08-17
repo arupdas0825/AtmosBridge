@@ -135,4 +135,30 @@ Human-in-the-loop oversight is mandatory: authorities must review and manually a
 ## 📄 License & Attribution
 Built for the Hack2Skill × Google Cloud "Build with AI: Code for Communities" Hackathon 2026.
 Open-source under the Apache 2.0 License.
-# AtmosBridge
+
+---
+
+## 🔐 Security
+
+**All secrets must be supplied through environment variables. Never commit real credentials to Git.**
+
+| Variable | Required | Side | Description |
+|---|---|---|---|
+| `GEMINI_API_KEY` | Yes (for AI features) | **Server-only** | Google AI Studio key — must never reach the browser |
+| `VITE_GOOGLE_MAPS_API_KEY` | No (SVG fallback activates) | Client (HTTP-referrer restricted) | Google Maps JS API key |
+| `OPENAQ_API_KEY` | No | Server-only | OpenAQ v2 API key |
+| `FIREBASE_PROJECT_ID` | No | Server-only | Firebase project for cloud deployment |
+| `FIREBASE_STORAGE_BUCKET` | No | Server-only | Firebase storage bucket |
+
+### Setup
+```bash
+# Copy the safe template — NEVER copy real values into .env.example
+cp .env.example .env
+# Edit .env with your own credentials (this file is git-ignored)
+```
+
+> [!WARNING]
+> `.env` is excluded from Git via `.gitignore`. **Do not** remove or bypass this rule. Never paste real API keys into `.env.example`, `README.md`, source code, or any tracked file.
+
+> [!NOTE]
+> The pre-commit hook in `.git/hooks/pre-commit` will scan staged files for accidental credential patterns and block the commit if any are found. Run `python scripts/security_check.py` at any time to audit the full working tree.
