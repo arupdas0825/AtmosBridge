@@ -75,7 +75,7 @@ export default function App() {
       <Navbar />
 
       {/* Main Screen Content Viewport */}
-      <main className="flex-1 pb-20 lg:pb-12">
+      <main className="flex-1 pb-28 lg:pb-12">
         {renderScreen()}
       </main>
 
