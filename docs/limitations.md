@@ -1,6 +1,6 @@
 # AtmosBridge — Known Limitations & Assumptions
 
-In accordance with the project's **Honesty Over Polish** principle (`RULES.md` §8), this document records architectural boundaries, prototype assumptions, and future enhancements.
+In accordance with the project's **Honesty Over Polish** principle (see [`docs/responsible-ai.md`](./responsible-ai.md)), this document records architectural boundaries, prototype assumptions, and future enhancements.
 
 ---
 

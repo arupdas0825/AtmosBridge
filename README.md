@@ -1,19 +1,19 @@
 <div align="center">
 <img width="120" height="120" alt="logo" src="https://github.com/user-attachments/assets/c894a42f-20ec-4f29-99ea-0984f921ed75" />
 
-# AtmosBridge
+# 🌍 AtmosBridge
 
 **Federated AI Climate-Intelligence Platform for Hyperlocal & Cross-Border Pollution Detection**
 
-*Hack2Skill × Google Cloud — "Build with AI: Code for Communities" (2nd Edition)*
+*Hack2Skill × Google Cloud — "Build with AI: Code for Communities" (2nd Edition)*  
 **Track 2 — Clean Air & Climate Resilience** · BRICS Sustainability Theme
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 ![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite%20(JS%2FJSX)-61DAFB)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
 ![AI](https://img.shields.io/badge/AI-Google%20Gemini-8E75FF)
 
-[Live Demo](https://atmosbridgeai.vercel.app/) · [Demo Video](#) · [Pitch Deck](#) · [Documentation](./docs)
+[Live Prototype](https://atmosbridgeai.vercel.app/) · [Demo Video Script](./docs/demo-script.md) · [Pitch Deck Outline](./docs/pitch-deck.md) · [Submission Checklist](./docs/HACK2SKILL-SUBMISSION-CHECKLIST.md) · [Documentation](./docs)
 
 </div>
 
@@ -27,10 +27,10 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 
 1. **Multimodal citizen reports** — photos, voice transcripts, geo-tagged text
 2. **Ground sensor networks** — OpenAQ live telemetry + a dense simulated mesh
-3. **Satellite proxy indicators** — Aerosol Optical Depth proxies
+3. **Satellite proxy indicators** — Aerosol Optical Depth (AOD) proxies
 4. **Meteorological dispersion feeds** — Open-Meteo live wind and humidity data
 
-**Google Gemini** performs multimodal reasoning with grounded function-calling (`get_local_air_quality`, `get_weather`) so it structures reports rather than inventing readings, and a **physics-informed spike-risk engine** forecasts 6h/12h/24h risk with an explainable feature-importance breakdown (an offline-trainable XGBoost regressor prototype is included as the production-ML upgrade path — see [Prediction Engine](#-prediction-engine) below). Together they surface hyperlocal hotspots, model cross-border atmospheric drift, and route actionable alerts to municipal authorities — with human-in-the-loop governance and zero automated punitive action.
+**Google Gemini** performs multimodal reasoning with grounded function-calling (`get_local_air_quality`, `get_weather`) so it structures reports into actionable incident data rather than inventing readings. A **physics-grounded spike regression engine** (supported by an offline XGBoost training pipeline) forecasts 6h/12h/24h spike risk. Together they surface hyperlocal hotspots, model cross-border atmospheric drift, and route actionable alerts to municipal authorities — with human-in-the-loop governance and zero automated punitive action.
 
 > **2–3 line pitch:** AtmosBridge is a federated, AI-powered climate intelligence platform that fuses citizen-reported pollution sightings, ground sensors, satellite indicators, and weather data to detect hyperlocal pollution hotspots city-level AQI monitors miss. Gemini structures multimodal citizen reports into explainable risk assessments; a prediction layer forecasts spikes and models cross-border smog movement between BRICS regions, routing high-confidence alerts to authorities for rapid, human-approved intervention.
 
@@ -48,7 +48,7 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 | 6 | Global / BRICS Map | Geospatial Core | Multi-layer map — AQI, hotspots, sensors, wind vectors, trans-boundary plumes |
 | 7 | Hotspot Explorer | Intelligence | Filterable active-hotspot catalog with severity badges and trend indicators |
 | 8 | Event Details | Intelligence | Citizen sightings, sensor clusters, meteorological context in one dossier |
-| 9 | Prediction Timeline | Forecasting | 6h/12h/24h spike-risk forecast with confidence bands and feature importance |
+| 9 | Prediction Timeline | Forecasting | 6h/12h/24h spike forecast timeline with confidence bands and feature importance |
 | 10 | Authority Dashboard | Governance | Real-time alert triage queue, affected-population estimates, status |
 | 11 | Alert Details & Triage | Governance | Full incident dossier, recommended interventions, Acknowledge/Escalate |
 | 12 | Cross-Border Intelligence | Regional | Trans-boundary drift model, source/target region cards, bilateral advisory |
@@ -66,19 +66,13 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 | Frontend | React 18 + Vite — **pure JavaScript/JSX, no TypeScript** — Tailwind CSS, Recharts |
 | Maps | Google Maps JavaScript API, with an SVG/vector fallback if no key is configured |
 | Backend | Python 3.10+, FastAPI, Pydantic v2, Uvicorn |
-| AI / Multimodal | Google Gemini API, function-calling tools for grounded data, deterministic demo-mode fallback |
-| Prediction | Deterministic, physics-informed spike-risk engine (live); offline-trainable XGBoost regressor prototype included, not yet wired into live inference |
-| Live data | OpenAQ (air quality), Open-Meteo (weather) |
-| Simulated data | Seeded dense sensor mesh + satellite aerosol proxy dataset, clearly labeled in-app |
-| Data store | Seeded JSON files served via a lightweight storage service (no managed database in the current build) |
-| Deployment (live) | Single Vercel project — Vite frontend + FastAPI Python serverless function |
-| Deployment (documented scale-out) | Vercel (frontend) + Google Cloud Run (backend), for durable storage beyond a single serverless instance |
+| AI / Multimodal | Google Gemini API (gemini-2.5-flash / gemini-2.0-flash / gemini-1.5-flash), with deterministic demo fallback |
+| Prediction | Physics-Grounded Atmospheric Dispersion & Regression Engine (offline XGBoost regressor script) |
+| Live Data | OpenAQ (air quality), Open-Meteo (weather) |
+| Simulated Data | Seeded dense sensor mesh + satellite aerosol proxy dataset, clearly labeled in-app |
+| Deployment | Vercel (frontend SPA & serverless API) / Google Cloud Run (containerized backend ready) |
 
 Full design rationale lives in [`docs/architecture.md`](./docs/architecture.md) and [`docs/design.md`](./docs/design.md).
-
-### 🔮 Prediction Engine
-
-The live `/api/predict` endpoint is a **deterministic, physics-informed heuristic** — it combines wind-stagnation, humidity/inversion, citizen-report density, and satellite AOD signals with explainable, hand-set feature weights (returned with every forecast), not a black-box number. A real XGBoost regressor can be trained offline via `scripts/train_model.py`, which produces `backend/models/spike_predictor.json` — this is the intended production-ML path, but it isn't loaded by the live endpoint yet, because doing so would pull `xgboost`/`numpy`/`pandas` into the serverless Vercel function and risk its bundle-size limit. See [`docs/limitations.md`](./docs/limitations.md) §3 for the full rationale.
 
 ---
 
@@ -149,27 +143,27 @@ ENVIRONMENT=development
 
 ---
 
-## 🛡️ Responsible AI & Provenance
+## 🛡️ Responsible AI & Data Provenance
 
 Every numeric environmental figure in AtmosBridge carries an explicit provenance tag:
 
 - **`Observed`** — directly ingested from live stations (OpenAQ, Open-Meteo)
 - **`Inferred`** — structured by Gemini multimodal analysis from citizen submissions
-- **`Predicted`** — forecast by the XGBoost regression model
+- **`Predicted`** — forecast by the physics-grounded regression model
 - **`Simulated`** — seeded synthetic sensor grids and cross-border scenarios, clearly labeled
 
 Human-in-the-loop oversight is mandatory: authorities review and manually acknowledge every alert before any action is taken. No automated regulatory enforcement occurs, and the platform never issues a medical diagnosis — only general public-health guidance. See [`docs/prd.md`](./docs/prd.md) §13 for the full Responsible AI statement.
 
 ---
 
-## ⚠️ Known Limitations
+## ⚠️ Known Limitations & Truthfulness
 
-- Satellite data is a seeded proxy, not a live Earth Engine feed (documented ingestion path for a production swap is in `docs/architecture.md`).
+- Satellite data is a seeded proxy, not a live Earth Engine feed (documented ingestion path for a production swap is in [`docs/architecture.md`](./docs/architecture.md)).
 - Sensor grid density is simulated to be realistic, not sourced from a live third-party network.
 - Cross-border pollution intelligence uses one seeded demo scenario rather than live inter-country data sharing.
 - Authority roles are demo-based and not tied to real municipal identity systems.
 
-Full tracker of build status: [`PHASES.md`](./PHASES.md). Working rules for contributors/agents: [`RULES.md`](./RULES.md). Cross-session project memory: [`MEMORY.md`](./MEMORY.md).
+Full details on project scope & limitations: [`docs/limitations.md`](./docs/limitations.md). Responsible AI statement: [`docs/responsible-ai.md`](./docs/responsible-ai.md). Final submission checklist: [`docs/HACK2SKILL-SUBMISSION-CHECKLIST.md`](./docs/HACK2SKILL-SUBMISSION-CHECKLIST.md).
 
 ---
 
@@ -177,47 +171,36 @@ Full tracker of build status: [`PHASES.md`](./PHASES.md). Working rules for cont
 
 ```
 atmosbridge/
+  LICENSE
   README.md
-  RULES.md
-  PHASES.md
-  MEMORY.md
   .env.example
-  docs/
-    prd.md  architecture.md  design.md  implementation-plan.md
-  frontend/   React + Vite + JSX
-  backend/    FastAPI (routers/ services/ models/)
-  scripts/    seed_data.py  train_model.py  security_check.py
-  screenshots/
+  .gitignore
+  vercel.json
+  Dockerfile
+  api/          Vercel serverless entrypoint
+  backend/      FastAPI application (routers/ services/ models/)
+  frontend/     React + Vite SPA
+  scripts/      seed_data.py  train_model.py  security_check.py  pre_commit_check.py
+  screenshots/  UI screenshot directory & capture guide
+  docs/         PRD, architecture, API reference, pitch deck, demo script, submission checklist
 ```
 
 ---
 
 ## 📄 License
 
-Built for the Hack2Skill × Google Cloud "Build with AI: Code for Communities" Hackathon 2026.
-Open-source under the **Apache License 2.0** — see [`LICENSE`](./LICENSE) for the full text.
-
-```
-Copyright 2026 Arup Das
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-```
+Built for the Hack2Skill × Google Cloud "Build with AI: Code for Communities" Hackathon 2026.  
+Open-source under the **Apache 2.0 License**. See [LICENSE](./LICENSE) for the full text.
 
 ---
 
-## 👤 Author
+## 👤 Author & Contributor
 
-**Arup Das**
-B.Tech CSE (AI/ML), Brainware University, Kolkata
-## 👤 Contributor
-
-**Aditya Bar**
-B.Tech CSE (AI/ML), Brainware University, Kolkata
-
-- GitHub: [@arupdas0825](https://github.com/arupdas0825)
-- Portfolio: [arup-portfolio-seven.vercel.app](https://arup-portfolio-seven.vercel.app)
+**Arup Das** (Lead Author)  
+B.Tech CSE (AI/ML), Brainware University, Kolkata  
+- GitHub: [@arupdas0825](https://github.com/arupdas0825)  
+- Portfolio: [arup-portfolio-seven.vercel.app](https://arup-portfolio-seven.vercel.app)  
 - Email: dasarup0804@gmail.com
+
+**Aditya Bar** (Contributor)  
+B.Tech CSE (AI/ML), Brainware University, Kolkata  

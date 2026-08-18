@@ -63,7 +63,7 @@ AtmosBridge is **not** an AQI dashboard. Its differentiator is surfacing what co
 
 Citizen sees smoke → opens app → picks language → voice/text report ("Large smoke plume near the industrial area") → uploads photo → shares location → **Gemini multimodal analysis** extracts event type, severity, confidence, source category → backend fuses this with local AQI + weather + simulated satellite/historical data → risk engine computes hotspot score, spike probability, cross-border risk, affected-population estimate → **HIGH-RISK ALERT** appears on the Authority Dashboard → authority opens it, sees map + evidence + AI explanation + predicted plume movement + recommended intervention → acknowledges/escalates → response is logged.
 
-This exact flow is the required 3–5 minute demo path (see `implementation-plan.md` §Demo Script).
+This exact flow is the required 3–5 minute demo path (see [`docs/demo-script.md`](./demo-script.md)).
 
 ---
 
