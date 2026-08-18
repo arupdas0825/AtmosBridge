@@ -57,6 +57,22 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 | 15 | Settings & Localization | Accessibility | Language switch (English, हिन्दी, বাংলা), preferences, demo reset |
 | 16 | About & Responsible AI | Compliance | Responsible-AI principles, non-diagnostic disclaimer, audit architecture |
 
+## Required Screenshots Catalog
+
+| File Name | Target Screen | Description / Focus |
+|---|---|---|
+| `landing.png` | Landing / Mission (Screen 1) | Hero section, BRICS overview, rapid report button, authority portal entry point. |
+| `citizen-report.png` | Citizen Report (Screen 2) | Incident report form with photo upload, geolocation picker, and text description. |
+| `gemini-analysis.png` | Photo Analysis Result (Screen 4) | Gemini multimodal AI breakdown showing structured output: event type, severity rating (1–4), visual cues, and recommended verification steps. |
+| `local-intelligence.png` | Local Air Intelligence (Screen 5) | Hyperlocal AQI display, health advisories, N95 advisory, and WHO limit comparisons. |
+| `brics-map.png` | Global / BRICS Map (Screen 6) | Interactive map showing AQI overlay, hotspot clusters, sensor mesh, and trans-boundary wind vector overlays across BRICS regions. |
+| `hotspots.png` | Hotspot Explorer (Screen 7) | Filterable active-hotspot grid with severity badges and atmospheric trend indicators. |
+| `prediction.png` | Prediction Timeline (Screen 9) | 6h/12h/24h AQI spike forecast chart with confidence bounds and feature importance breakdown. |
+| `cross-border.png` | Cross-Border Intelligence (Screen 12) | Trans-boundary atmospheric pollution drift model showing source and target country cards (e.g., Punjab/Pakistan corridor or regional industrial drift). |
+| `authority-dashboard.png` | Authority Dashboard (Screen 10 & 11) | Real-time incident triage queue, affected population estimates, and Acknowledge / Escalate governance workflow buttons. |
+| `mobile.png` | Mobile Viewport | Responsive mobile UI showcasing the floating liquid-glass bottom navigation dock. |
+
+
 ---
 
 ## 🏗️ Architecture & Stack
@@ -204,3 +220,5 @@ B.Tech CSE (AI/ML), Brainware University, Kolkata
 
 **Aditya Bar** (Contributor)  
 B.Tech CSE (AI/ML), Brainware University, Kolkata  
+- GitHub: [@adityabar07](https://github.com/adityabar07)  
+
