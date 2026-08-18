@@ -212,6 +212,7 @@ You may obtain a copy of the License at
 ## 👤 Author
 
 **Arup Das**
+B.Tech CSE (AI/ML), Brainware University, Kolkata
 ## 👤 Contributor
 
 **Aditya Bar**
