@@ -118,8 +118,13 @@ class CrossBorderScenario(BaseModel):
     last_updated: str
 
 # Authority Alert & Audit Log Models
+class AlertEvidenceCount(BaseModel):
+    citizen_reports: int = 1
+    photos: int = 0
+    sensor_anomalies: int = 0
+
 class AlertActionEntry(BaseModel):
-    action: Literal["acknowledge", "escalate", "dispatch", "resolve"]
+    action: str
     actor: str
     timestamp: str
     notes: Optional[str] = None
@@ -128,11 +133,13 @@ class AuthorityAlert(BaseModel):
     id: str
     hotspot_id: str
     title: str
+    pollution_type: Optional[str] = "Industrial Combustion & Particulate Emission"
     severity: SeverityLevel
     risk_score: float
     status: Literal["pending", "acknowledged", "escalated", "resolved"]
     created_at: str
     affected_population: int
+    evidence_count: Optional[AlertEvidenceCount] = None
     gemini_summary: str
     recommended_intervention: str
     action_log: List[AlertActionEntry] = Field(default_factory=list)

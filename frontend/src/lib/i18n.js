@@ -15,8 +15,8 @@ export const translations = {
     navAbout: 'About & AI',
 
     // Landing
-    heroTitle: 'Detect Pollution Before It Becomes a Crisis.',
-    heroSubtitle: 'AtmosBridge combines citizen observations, environmental signals, geospatial intelligence, and Google AI to identify hyperlocal pollution events, forecast emerging risks, and help authorities respond faster.',
+    heroTitle: 'See Pollution Move. Act Before It Spreads.',
+    heroSubtitle: 'AtmosBridge connects citizen observations, environmental signals, geospatial intelligence, and AI-assisted analysis to surface hyperlocal pollution events and emerging atmospheric risks.',
     ctaReport: 'Report Pollution Sighting',
     ctaAuthority: 'Open Authority Dashboard',
     ctaExploreMap: 'Explore BRICS Live Map',

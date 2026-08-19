@@ -2,44 +2,173 @@
   {
     "id": "alt_delhi_8812",
     "hotspot_id": "hotspot_ind_delhi_01",
-    "title": "Critical Industrial Discharge \u2014 Okhla Phase II",
+    "title": "Critical Industrial Waste Combustion",
+    "pollution_type": "Toxic Industrial Waste & Rubber Combustion",
     "severity": "critical",
     "risk_score": 89.5,
     "status": "pending",
-    "created_at": "2026-08-19T15:11:26.002861+00:00",
+    "created_at": "2026-08-19T14:21:00.000000+00:00",
     "affected_population": 58000,
-    "gemini_summary": "Unpermitted tire/waste combustion confirmed by 9 visual reports and local PM2.5 sensor spike to 248 \u00b5g/m\u00b3. Severe immediate respiratory hazard for neighboring residential colonies.",
-    "recommended_intervention": "1. Dispatch hazardous emissions inspection unit to Block C industrial quadrant.\n2. Issue school outdoor recess suspension advisory within 2.5km radius.\n3. Deploy misting cannons along Maa Anandmayee Marg corridor.",
-    "action_log": [],
+    "evidence_count": {
+      "citizen_reports": 9,
+      "photos": 2,
+      "sensor_anomalies": 1
+    },
+    "gemini_summary": "Unpermitted tire and industrial plastic combustion confirmed by 9 citizen visual reports and local ground sensor spike to 248 µg/m³. Severe immediate respiratory hazard for adjacent residential colonies.",
+    "recommended_intervention": "1. Dispatch municipal hazardous emissions squad to Block C quadrant.\n2. Issue outdoor recess suspension advisory within 2.5km radius.\n3. Deploy anti-smog misting cannons along Maa Anandmayee Marg corridor.",
+    "action_log": [
+      {
+        "action": "report_received",
+        "actor": "Citizen Observation Network",
+        "timestamp": "2026-08-19T14:21:00.000000+00:00",
+        "notes": "Initial citizen sighting logged with geo-tagged photographic evidence."
+      },
+      {
+        "action": "ai_triage",
+        "actor": "Google Gemini Vision Engine",
+        "timestamp": "2026-08-19T14:24:00.000000+00:00",
+        "notes": "Multimodal analysis extracted high-toxicity particulate signature and flagged severe risk."
+      }
+    ],
     "location_name": "Okhla Industrial Area, Phase II",
     "country": "India",
     "latitude": 28.5355,
-    "longitude": 77.269,
-    "evidence_photo_url": "https://images.unsplash.com/photo-1579240830604-fa9a781258d4?w=600&auto=format&fit=crop&q=60"
+    "longitude": 77.2690,
+    "evidence_photo_url": "https://images.unsplash.com/photo-1579240830604-fa9a781258d4?w=800&auto=format&fit=crop&q=80"
   },
   {
     "id": "alt_punjab_8813",
     "hotspot_id": "hotspot_ind_punjab_02",
-    "title": "Cross-Border Crop Residue Fire Plume \u2014 Amritsar Border",
+    "title": "Cross-Border Crop Residue Fire Plume",
+    "pollution_type": "Agricultural Stubble Open Burning",
     "severity": "high",
     "risk_score": 78.0,
     "status": "acknowledged",
-    "created_at": "2026-08-19T15:11:26.002861+00:00",
+    "created_at": "2026-08-19T13:45:00.000000+00:00",
     "affected_population": 84000,
-    "gemini_summary": "Intense stubble combustion cluster generating eastward-moving smoke corridor across international border. High particulate density (PM2.5: 192 \u00b5g/m\u00b3).",
+    "evidence_count": {
+      "citizen_reports": 6,
+      "photos": 3,
+      "sensor_anomalies": 2
+    },
+    "gemini_summary": "Intense stubble combustion cluster generating westward-moving smoke corridor across international border. High particulate density (PM2.5: 192 µg/m³).",
     "recommended_intervention": "1. Alert District Agricultural Magistrate for rapid mechanized fire suppression.\n2. Trigger bilateral cross-border clean air coordination bulletin.",
     "action_log": [
       {
+        "action": "report_received",
+        "actor": "Citizen Observation Network",
+        "timestamp": "2026-08-19T13:45:00.000000+00:00",
+        "notes": "Ground observation reported active crop burning along western perimeter."
+      },
+      {
+        "action": "ai_triage",
+        "actor": "Google Gemini Vision Engine",
+        "timestamp": "2026-08-19T13:48:00.000000+00:00",
+        "notes": "Cross-referenced with MODIS thermal hotspot proxy and local anemometer."
+      },
+      {
         "action": "acknowledge",
         "actor": "Officer H. Singh (Punjab Pollution Control Board)",
-        "timestamp": "2026-08-19T15:11:26.002861+00:00",
+        "timestamp": "2026-08-19T14:10:00.000000+00:00",
         "notes": "Acknowledged. Dispatched field team with agricultural balers."
       }
     ],
     "location_name": "Majha Agricultural Corridor, Amritsar",
     "country": "India",
-    "latitude": 31.634,
+    "latitude": 31.6340,
     "longitude": 74.8723,
-    "evidence_photo_url": "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=600&auto=format&fit=crop&q=60"
+    "evidence_photo_url": "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=800&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "alt_saopaulo_8814",
+    "hotspot_id": "hotspot_bra_sp_01",
+    "title": "Freight Transit Heavy Diesel Inversion",
+    "pollution_type": "Heavy Freight Diesel Particulate Emission",
+    "severity": "watch",
+    "risk_score": 64.0,
+    "status": "escalated",
+    "created_at": "2026-08-19T12:30:00.000000+00:00",
+    "affected_population": 125000,
+    "evidence_count": {
+      "citizen_reports": 4,
+      "photos": 1,
+      "sensor_anomalies": 1
+    },
+    "gemini_summary": "Thermal inversion trapping heavy freight diesel particulates along the Marginal Tietê arterial artery. Ambient PM2.5 elevated to 118 µg/m³.",
+    "recommended_intervention": "1. Enforce emergency truck idling restrictions along transit arteries.\n2. Reroute non-essential logistics traffic to outer ring roads.",
+    "action_log": [
+      {
+        "action": "report_received",
+        "actor": "Citizen Observation Network",
+        "timestamp": "2026-08-19T12:30:00.000000+00:00",
+        "notes": "Traffic smog report submitted via mobile web."
+      },
+      {
+        "action": "ai_triage",
+        "actor": "Google Gemini Vision Engine",
+        "timestamp": "2026-08-19T12:35:00.000000+00:00",
+        "notes": "Assessed thermal inversion condition using Open-Meteo boundary layer feed."
+      },
+      {
+        "action": "escalate",
+        "actor": "CETESB Environmental Inspector",
+        "timestamp": "2026-08-19T13:00:00.000000+00:00",
+        "notes": "Field unit dispatched for vehicular emissions enforcement."
+      }
+    ],
+    "location_name": "Marginal Tietê Freight Corridor, São Paulo",
+    "country": "Brazil",
+    "latitude": -23.5180,
+    "longitude": -46.6560,
+    "evidence_photo_url": "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&auto=format&fit=crop&q=80"
+  },
+  {
+    "id": "alt_highveld_8815",
+    "hotspot_id": "hotspot_zaf_highveld_01",
+    "title": "Coal Mining Coal Dust & SO2 Dispersion",
+    "pollution_type": "Uncontrolled Coal Dust & Smelting Emissions",
+    "severity": "high",
+    "risk_score": 79.2,
+    "status": "resolved",
+    "created_at": "2026-08-19T09:15:00.000000+00:00",
+    "affected_population": 42000,
+    "evidence_count": {
+      "citizen_reports": 8,
+      "photos": 2,
+      "sensor_anomalies": 2
+    },
+    "gemini_summary": "High wind gusts over open coal stockpiles causing fugitive PM10 and SO2 dispersion across adjacent communities in Mpumalanga. Local concentration peaked at 210 µg/m³.",
+    "recommended_intervention": "1. Mandate immediate chemical dust suppressant spraying over active stockpiles.\n2. Verify compliance with atmospheric emission license limits.",
+    "action_log": [
+      {
+        "action": "report_received",
+        "actor": "Citizen Observation Network",
+        "timestamp": "2026-08-19T09:15:00.000000+00:00",
+        "notes": "Multiple citizen complaints regarding severe coal dust clouds."
+      },
+      {
+        "action": "ai_triage",
+        "actor": "Google Gemini Vision Engine",
+        "timestamp": "2026-08-19T09:20:00.000000+00:00",
+        "notes": "Confirmed high particulate loading and fugitive dust trajectory."
+      },
+      {
+        "action": "escalate",
+        "actor": "District Air Quality Officer",
+        "timestamp": "2026-08-19T09:50:00.000000+00:00",
+        "notes": "Field inspection team dispatched to mining site."
+      },
+      {
+        "action": "resolve",
+        "actor": "District Air Quality Officer",
+        "timestamp": "2026-08-19T12:00:00.000000+00:00",
+        "notes": "Dust suppressants applied. Stockpile covering verified by inspectors."
+      }
+    ],
+    "location_name": "Highveld Energy Belt, Mpumalanga",
+    "country": "South Africa",
+    "latitude": -26.0150,
+    "longitude": 29.2340,
+    "evidence_photo_url": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=80"
   }
 ]

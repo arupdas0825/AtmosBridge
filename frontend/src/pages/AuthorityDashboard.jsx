@@ -14,15 +14,18 @@ import {
   RefreshCw, 
   Filter,
   Send,
-  Building2
+  Building2,
+  Activity,
+  Flame,
+  Radio
 } from 'lucide-react';
 
 export default function AuthorityDashboard() {
-  const { t, navigateTo, setActiveAlertId, refreshData } = useApp();
+  const { t, navigateTo, setActiveAlertId, refreshData, hotspotsList } = useApp();
 
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('pending'); // 'all' | 'pending' | 'acknowledged' | 'escalated' | 'resolved'
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'pending' | 'acknowledged' | 'escalated' | 'resolved'
 
   const fetchAlerts = async () => {
     setLoading(true);
@@ -50,73 +53,95 @@ export default function AuthorityDashboard() {
     navigateTo('alert-details', { alertId });
   };
 
+  // Operational metrics computed from active data
+  const pendingCount = alerts.filter(a => a.status === 'pending').length;
+  const ackCount = alerts.filter(a => a.status === 'acknowledged').length;
+  const dispatchCount = alerts.filter(a => a.status === 'escalated').length;
+  const resolvedCount = alerts.filter(a => a.status === 'resolved').length;
+  const highRiskCount = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 font-sans">
       
-      {/* Header */}
+      {/* Authority Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">{t.authTitle || 'Municipal Authority Alert Queue'}</h1>
-            <ProvenanceTag type="inferred" size="xs" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center">
+              <Building2 className="w-4 h-4" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
+              Municipal Environmental Authority
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+              Demo / Simulated Operational Data
+            </span>
           </div>
           <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-            {t.authSubtitle || 'Triage queue for severe localized emissions. Human-in-the-loop verification with audit-logged action logs.'}
+            Human-approved environmental incident triage and response. Every action updates the municipal compliance audit trail.
           </p>
         </div>
 
         <button
           onClick={fetchAlerts}
-          className="btn-secondary text-xs py-2"
+          className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
         >
           <RefreshCw className="w-3.5 h-3.5 text-brand" />
-          <span>Refresh Live Queue</span>
+          <span>Refresh Incident Queue</span>
         </button>
       </div>
 
-      {/* Operational KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="card-surface p-4 text-center space-y-1">
-          <span className="text-xs text-ink-muted font-medium">Pending Review</span>
+      {/* Operational KPI Metric Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+        <div className="card-surface p-4 text-center space-y-1 border-t-2 border-t-rose-500">
+          <span className="text-[11px] text-ink-muted font-medium uppercase tracking-wider">Pending Review</span>
           <div className="text-2xl sm:text-3xl font-extrabold font-mono text-risk-critical">
-            {alerts.filter(a => a.status === 'pending').length}
+            {pendingCount}
           </div>
-          <span className="text-[11px] text-ink-muted">Immediate Action</span>
+          <span className="text-[10px] text-ink-muted">Awaiting Triage</span>
         </div>
 
-        <div className="card-surface p-4 text-center space-y-1">
-          <span className="text-xs text-ink-muted font-medium">Acknowledged</span>
+        <div className="card-surface p-4 text-center space-y-1 border-t-2 border-t-amber-500">
+          <span className="text-[11px] text-ink-muted font-medium uppercase tracking-wider">Acknowledged</span>
           <div className="text-2xl sm:text-3xl font-extrabold font-mono text-risk-watch">
-            {alerts.filter(a => a.status === 'acknowledged').length}
+            {ackCount}
           </div>
-          <span className="text-[11px] text-ink-muted">Under Assessment</span>
+          <span className="text-[10px] text-ink-muted">Under Assessment</span>
         </div>
 
-        <div className="card-surface p-4 text-center space-y-1">
-          <span className="text-xs text-ink-muted font-medium">Field Dispatched</span>
+        <div className="card-surface p-4 text-center space-y-1 border-t-2 border-t-teal-500">
+          <span className="text-[11px] text-ink-muted font-medium uppercase tracking-wider">Field Dispatch</span>
           <div className="text-2xl sm:text-3xl font-extrabold font-mono text-brand">
-            {alerts.filter(a => a.status === 'escalated').length}
+            {dispatchCount}
           </div>
-          <span className="text-[11px] text-ink-muted">Inspectors En Route</span>
+          <span className="text-[10px] text-ink-muted">Inspectors En Route</span>
         </div>
 
-        <div className="card-surface p-4 text-center space-y-1">
-          <span className="text-xs text-ink-muted font-medium">Resolved Today</span>
+        <div className="card-surface p-4 text-center space-y-1 border-t-2 border-t-emerald-500">
+          <span className="text-[11px] text-ink-muted font-medium uppercase tracking-wider">Resolved</span>
           <div className="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-700">
-            {alerts.filter(a => a.status === 'resolved').length}
+            {resolvedCount}
           </div>
-          <span className="text-[11px] text-ink-muted">Contained Incidents</span>
+          <span className="text-[10px] text-ink-muted">Contained Events</span>
+        </div>
+
+        <div className="card-surface p-4 text-center space-y-1 border-t-2 border-t-slate-800 col-span-2 sm:col-span-1">
+          <span className="text-[11px] text-ink-muted font-medium uppercase tracking-wider">Active Hotspots</span>
+          <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900">
+            {hotspotsList.length || 6}
+          </div>
+          <span className="text-[10px] text-ink-muted">Monitored Clusters</span>
         </div>
       </div>
 
       {/* Triage Status Filter Bar */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs border-b border-slate-200">
         {[
-          { id: 'all', label: `All Alerts (${alerts.length})` },
-          { id: 'pending', label: `🚨 ${t.statusPending || 'Pending'}` },
-          { id: 'acknowledged', label: `👀 ${t.statusAcknowledged || 'Acknowledged'}` },
-          { id: 'escalated', label: `🚒 ${t.statusEscalated || 'Escalated'}` },
-          { id: 'resolved', label: `✅ ${t.statusResolved || 'Resolved'}` }
+          { id: 'all', label: `All Incidents (${alerts.length})` },
+          { id: 'pending', label: `🚨 Pending Review (${pendingCount})` },
+          { id: 'acknowledged', label: `👀 Acknowledged (${ackCount})` },
+          { id: 'escalated', label: `🚒 Field Dispatched (${dispatchCount})` },
+          { id: 'resolved', label: `✅ Resolved (${resolvedCount})` }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -132,14 +157,14 @@ export default function AuthorityDashboard() {
         ))}
       </div>
 
-      {/* Alerts Queue */}
+      {/* Incident Queue List */}
       {loading ? (
-        <Loader text="Fetching real-time authority alerts..." />
+        <Loader text="Loading municipal incident queue..." />
       ) : alerts.length === 0 ? (
         <EmptyState
-          title="No alerts in this queue"
-          description="All high-risk pollution incidents in this category have been addressed or cleared."
-          actionText="View All Categories"
+          title="No incidents in this queue"
+          description="All reported environmental pollution events in this status category have been addressed."
+          actionText="View All Incidents"
           onAction={() => setStatusFilter('all')}
         />
       ) : (

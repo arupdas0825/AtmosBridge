@@ -15,8 +15,23 @@ import {
   FileText, 
   ListChecks, 
   History, 
-  UserCheck
+  UserCheck,
+  Camera,
+  Radio,
+  Flame,
+  AlertTriangle,
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+
+const customPinIcon = L.divIcon({
+  className: 'custom-alert-pin',
+  html: `<div style="background-color:#B3251F;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(179,37,31,0.6);"></div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]
+});
 
 export default function AlertDetails() {
   const { activeAlertId, navigateTo, refreshData, t } = useApp();
@@ -49,7 +64,7 @@ export default function AlertDetails() {
         alert.id,
         actionType,
         'Officer Sharma (Municipal EPC Lead)',
-        actionNotes || `Operational action ${actionType} recorded.`
+        actionNotes || `Operational action ${actionType} recorded in municipal audit trail.`
       );
       if (updated) {
         setAlert(updated);
@@ -67,18 +82,26 @@ export default function AlertDetails() {
   if (!alert) {
     return (
       <div className="max-w-3xl mx-auto py-12 text-center font-sans">
-        <p className="text-sm text-ink-muted">Alert not found.</p>
+        <p className="text-sm text-ink-muted">Alert record not found.</p>
         <button onClick={() => navigateTo('authority')} className="btn-primary mt-4">
-          Return to Dashboard
+          Return to Authority Dashboard
         </button>
       </div>
     );
   }
 
+  const evidence = alert.evidence_count || {
+    citizen_reports: 6,
+    photos: 1,
+    sensor_anomalies: 1
+  };
+
+  const hasCoords = alert.latitude && alert.longitude;
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6 font-sans">
       
-      {/* Back link */}
+      {/* Back Link */}
       <button 
         onClick={() => navigateTo('authority')}
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-dark transition-colors"
@@ -93,135 +116,244 @@ export default function AlertDetails() {
           <div className="space-y-1.5 max-w-2xl">
             <div className="flex items-center gap-2 flex-wrap">
               <SeverityBadge severity={alert.severity} size="sm" />
-              <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 uppercase border border-slate-200">
+              <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 uppercase border border-slate-200">
                 Status: {alert.status}
               </span>
+              <span className="font-mono text-xs text-ink-muted">Incident #{alert.id}</span>
               <ProvenanceTag type="inferred" size="xs" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">{alert.title}</h1>
-            <div className="flex items-center gap-4 text-xs text-ink-muted pt-0.5 flex-wrap">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-brand" />
-                {alert.location_name} ({alert.country})
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5 text-ink-muted" />
-                Affected Pop: <b className="text-ink font-mono">{alert.affected_population?.toLocaleString()}</b>
-              </span>
+
+            <h1 className="text-xl sm:text-2xl font-extrabold text-ink">
+              {alert.title}
+            </h1>
+
+            <p className="text-xs text-ink-muted">
+              Pollution Classification: <b className="text-brand font-semibold">{alert.pollution_type || 'Industrial Combustion'}</b>
+            </p>
+          </div>
+
+          <div className="text-right">
+            <div className="text-xs text-ink-muted">Assessed Risk Score</div>
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-risk-critical">
+              {Math.round(alert.risk_score)} <span className="text-xs font-normal text-ink-muted">/ 100</span>
+            </div>
+            <div className="text-[11px] text-ink-muted font-mono mt-0.5">
+              Logged: {new Date(alert.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+            </div>
+          </div>
+        </div>
+
+        {/* Location & Population Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 text-xs text-ink-muted">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-brand flex-shrink-0" />
+            <div>
+              <span className="block text-[11px] text-ink-muted">Incident Location</span>
+              <b className="text-ink">{alert.location_name}</b>, {alert.country}
             </div>
           </div>
 
-          <div className="bg-surface p-4 rounded-card border border-slate-200 text-center min-w-[130px] flex-shrink-0">
-            <span className="text-[11px] font-semibold text-ink-muted block uppercase tracking-wider">Risk Urgency</span>
-            <span className="text-3xl font-extrabold font-mono text-risk-high block mt-0.5">{alert.risk_score}</span>
-            <span className="text-[10px] text-ink-muted block">Composite Score</span>
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-brand flex-shrink-0" />
+            <div>
+              <span className="block text-[11px] text-ink-muted">Estimated Population Exposed</span>
+              <b className="text-ink font-mono">{alert.affected_population?.toLocaleString()} residents</b>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Radio className="w-4 h-4 text-brand flex-shrink-0" />
+            <div>
+              <span className="block text-[11px] text-ink-muted">GPS Coordinates</span>
+              <b className="text-ink font-mono">{alert.latitude?.toFixed(4)}, {alert.longitude?.toFixed(4)}</b>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Grid: Evidence & Recommended Intervention */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Sighting Evidence */}
-        <div className="card-surface p-6 space-y-4">
-          <h3 className="font-bold text-sm text-ink flex items-center gap-2">
-            <FileText className="w-4 h-4 text-brand" />
-            <span>Gemini Incident Evaluation</span>
-          </h3>
+        {/* Left Column: AI Synthesis, Recommended Interventions, Map (7 Cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          {/* Gemini AI Incident Analysis */}
+          <div className="card-surface p-6 space-y-3">
+            <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4 text-brand" />
+              <span>Google Gemini AI Structured Synthesis</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-ink leading-relaxed bg-surface p-4 rounded-card border border-slate-200">
+              {alert.gemini_summary}
+            </p>
+          </div>
 
-          {alert.evidence_photo_url && (
-            <div className="rounded-md overflow-hidden border border-slate-200 aspect-video bg-slate-900">
-              <img src={alert.evidence_photo_url} alt="Evidence" className="w-full h-full object-cover" />
+          {/* Recommended Municipal Interventions */}
+          <div className="card-surface p-6 space-y-3">
+            <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-brand" />
+              <span>Recommended Authority Protocol</span>
+            </h3>
+            <div className="text-xs text-ink space-y-2 bg-brand-surface/40 p-4 rounded-card border border-brand/20">
+              {alert.recommended_intervention?.split('\n').map((step, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <span className="w-4 h-4 rounded-full bg-brand text-white flex items-center justify-center text-[10px] font-bold mt-0.5 flex-shrink-0">
+                    {idx + 1}
+                  </span>
+                  <span className="leading-relaxed">{step.replace(/^\d+\.\s*/, '')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Incident Geospatial Map Pinpoint */}
+          {hasCoords && (
+            <div className="card-surface p-6 space-y-3">
+              <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-brand" />
+                <span>Geospatial Pinpoint Location</span>
+              </h3>
+              <div className="h-56 rounded-card overflow-hidden border border-slate-200">
+                <MapContainer
+                  center={[alert.latitude, alert.longitude]}
+                  zoom={13}
+                  style={{ height: '100%', width: '100%' }}
+                  scrollWheelZoom={false}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://carto.com/">CartoDB</a>'
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                  />
+                  <Marker position={[alert.latitude, alert.longitude]} icon={customPinIcon}>
+                    <Popup>
+                      <div className="text-xs font-sans">
+                        <b>{alert.title}</b>
+                        <div className="text-slate-600 mt-1">{alert.location_name}</div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
             </div>
           )}
 
-          <div className="bg-surface p-3.5 rounded-card border border-slate-200/80 text-xs text-ink leading-relaxed">
-            {alert.gemini_summary}
-          </div>
+          {/* Photo Evidence Gallery */}
+          {alert.evidence_photo_url && (
+            <div className="card-surface p-6 space-y-3">
+              <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+                <Camera className="w-4 h-4 text-brand" />
+                <span>Submitted Photo Evidence</span>
+              </h3>
+              <div className="rounded-card overflow-hidden border border-slate-200 max-h-72 bg-slate-900 flex items-center justify-center">
+                <img 
+                  src={alert.evidence_photo_url} 
+                  alt="Incident evidence photo" 
+                  className="max-h-72 w-full object-cover" 
+                />
+              </div>
+            </div>
+          )}
+
         </div>
 
-        {/* Recommended Authority Protocol */}
-        <div className="card-surface p-6 space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <h3 className="font-bold text-sm text-ink flex items-center gap-2">
-              <ListChecks className="w-4 h-4 text-emerald-700" />
-              <span>Recommended Municipal Interventions</span>
+        {/* Right Column: Governance Actions & Audit Trail (5 Cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Action Decision Center */}
+          <div className="card-surface p-6 space-y-4">
+            <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+              <UserCheck className="w-4 h-4 text-brand" />
+              <span>Human-in-the-Loop Decision</span>
             </h3>
 
-            <div className="bg-emerald-50/50 p-4 rounded-card border border-emerald-200/80 text-xs text-ink space-y-2 whitespace-pre-line leading-relaxed font-mono">
-              {alert.recommended_intervention}
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-ink uppercase tracking-wider">
+                Officer Operational Notes:
+              </label>
+              <textarea
+                value={actionNotes}
+                onChange={(e) => setActionNotes(e.target.value)}
+                placeholder="Log dispatch orders, fine notices, or containment instructions..."
+                rows={3}
+                className="input-control text-xs"
+              />
             </div>
-          </div>
 
-          {/* Operational Action Form */}
-          <div className="space-y-3 pt-4 border-t border-slate-100">
-            <label className="block text-xs font-semibold text-ink uppercase tracking-wider">
-              Officer Action Log Notes:
-            </label>
-            <input
-              type="text"
-              value={actionNotes}
-              onChange={(e) => setActionNotes(e.target.value)}
-              placeholder="e.g. Unit 04 dispatched. Notice issued."
-              className="input-control text-xs"
-            />
-
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => handleAction('acknowledge')}
-                disabled={actionLoading}
-                className="btn-primary text-xs py-2 px-3 flex-1"
+                disabled={actionLoading || alert.status === 'acknowledged' || alert.status === 'resolved'}
+                className="btn-secondary text-xs py-2 justify-center"
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
                 <span>Acknowledge</span>
               </button>
+
               <button
-                onClick={() => handleAction('escalate')}
-                disabled={actionLoading}
-                className="btn-destructive text-xs py-2 px-3 flex-1"
+                onClick={() => handleAction('dispatch')}
+                disabled={actionLoading || alert.status === 'escalated' || alert.status === 'resolved'}
+                className="px-3 py-2 rounded-full text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white flex items-center justify-center gap-1.5 transition-colors shadow-xs"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Escalate & Dispatch</span>
+                <span>Dispatch Unit</span>
               </button>
+
               <button
                 onClick={() => handleAction('resolve')}
-                disabled={actionLoading}
-                className="btn-secondary text-xs py-2 px-3 flex-1"
+                disabled={actionLoading || alert.status === 'resolved'}
+                className="col-span-2 px-3 py-2.5 rounded-full text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1.5 transition-colors shadow-xs"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Resolve Incident</span>
+                {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                <span>Mark Incident Contained & Resolved</span>
               </button>
             </div>
           </div>
-        </div>
 
-      </div>
+          {/* Response Timeline & Audit Trail */}
+          <div className="card-surface p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-ink uppercase tracking-wider flex items-center gap-2">
+                <History className="w-4 h-4 text-brand" />
+                <span>Response Timeline</span>
+              </h3>
+              <span className="text-[10px] text-ink-muted">Simulated / Logged</span>
+            </div>
 
-      {/* Audit Log History */}
-      <div className="card-surface p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-brand" />
-          <h3 className="font-bold text-sm text-ink">{t.auditLogTitle || 'Governance Audit Trail'}</h3>
-        </div>
-
-        {(!alert.action_log || alert.action_log.length === 0) ? (
-          <p className="text-xs text-ink-muted">No operational actions logged yet. Awaiting officer triage.</p>
-        ) : (
-          <div className="space-y-2">
-            {alert.action_log.map((entry, idx) => (
-              <div key={idx} className="bg-surface p-3 rounded-md border border-slate-200/80 text-xs flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <span className="font-bold text-brand uppercase font-mono">{entry.action}</span>
-                  <span className="text-ink-muted ml-2 font-medium">by {entry.actor}</span>
-                  {entry.notes && <p className="text-ink text-[11px] mt-0.5">{entry.notes}</p>}
+            <div className="space-y-4 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+              {/* Initial Report Entry */}
+              <div className="flex items-start gap-3 relative">
+                <div className="w-7 h-7 rounded-full bg-slate-900 text-white flex items-center justify-center flex-shrink-0 z-10 text-[10px] font-bold">
+                  1
                 </div>
-                <span className="font-mono text-[10px] text-ink-muted">
-                  {new Date(entry.timestamp).toLocaleString()}
-                </span>
+                <div className="space-y-0.5 text-xs">
+                  <div className="font-semibold text-ink">Citizen Observation Received</div>
+                  <div className="text-[11px] text-ink-muted font-mono">
+                    {new Date(alert.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  <p className="text-ink-muted text-[11px]">Geo-tagged report submitted by field observers.</p>
+                </div>
               </div>
-            ))}
+
+              {/* Action Log Entries */}
+              {alert.action_log?.map((log, idx) => (
+                <div key={idx} className="flex items-start gap-3 relative">
+                  <div className="w-7 h-7 rounded-full bg-brand text-white flex items-center justify-center flex-shrink-0 z-10 text-[10px] font-bold">
+                    {idx + 2}
+                  </div>
+                  <div className="space-y-0.5 text-xs">
+                    <div className="font-semibold text-ink capitalize">{log.action.replace('_', ' ')}</div>
+                    <div className="text-[11px] text-brand font-medium">By: {log.actor}</div>
+                    <div className="text-[10px] text-ink-muted font-mono">
+                      {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <p className="text-ink-muted text-[11px] leading-relaxed">{log.notes}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+
+        </div>
+
       </div>
 
     </div>

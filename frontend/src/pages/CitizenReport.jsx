@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../state/AppContext';
 import { submitReport } from '../lib/api';
 import ProvenanceTag from '../components/common/ProvenanceTag';
@@ -13,7 +13,10 @@ import {
   Mic, 
   Navigation,
   Image as ImageIcon,
-  X
+  X,
+  RefreshCw,
+  Trash2,
+  FileText
 } from 'lucide-react';
 
 const LOCATION_PRESETS = [
@@ -59,23 +62,81 @@ export default function CitizenReport() {
     error: null
   });
 
+  // Photo & Evidence States
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoSource, setPhotoSource] = useState('upload'); // 'camera' | 'upload'
+  const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Handle Photo selection
-  const handlePhotoChange = (e) => {
+  // Hidden File Inputs
+  const cameraInputRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // File Validation and Processing
+  const processSelectedFile = (file, source = 'upload') => {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMessage('Please select a valid image file (JPEG, PNG, WebP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMessage('Photo exceeds maximum 5MB size limit.');
+      return;
+    }
+
+    setPhotoFile(file);
+    setPhotoSource(source);
+    setPhotoPreview(URL.createObjectURL(file));
+    setErrorMessage('');
+  };
+
+  const handleFileChange = (e, source = 'upload') => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage('Photo exceeds 5MB size limit.');
-        return;
-      }
-      setPhotoFile(file);
-      setPhotoPreview(URL.createObjectURL(file));
-      setErrorMessage('');
+      processSelectedFile(file, source);
     }
+  };
+
+  // Drag & Drop Handlers for Desktop
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processSelectedFile(file, 'upload');
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   // Sample quick preset templates
@@ -117,7 +178,7 @@ export default function CitizenReport() {
               const addr = data.address || {};
               const parts = [
                 addr.suburb || addr.neighbourhood || addr.road || addr.amenity,
-                addr.city || fontTown(addr) || addr.county || addr.state,
+                addr.city || addr.town || addr.municipality || addr.county || addr.state,
                 addr.country
               ].filter(Boolean);
 
@@ -154,10 +215,6 @@ export default function CitizenReport() {
       { timeout: 8000, enableHighAccuracy: true }
     );
   };
-
-  function fontTown(addr) {
-    return addr.town || addr.municipality || addr.village;
-  }
 
   // Coordinate Validation
   const validateForm = () => {
@@ -210,6 +267,23 @@ export default function CitizenReport() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6 font-sans">
       
+      {/* Hidden File Inputs for Native Camera and File Picker */}
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        ref={cameraInputRef}
+        onChange={(e) => handleFileChange(e, 'camera')}
+        className="hidden"
+      />
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        ref={fileInputRef}
+        onChange={(e) => handleFileChange(e, 'upload')}
+        className="hidden"
+      />
+
       {/* Header */}
       <div className="space-y-1 text-center sm:text-left">
         <div className="flex items-center justify-between flex-wrap gap-2">
@@ -273,38 +347,121 @@ export default function CitizenReport() {
           />
         </div>
 
-        {/* Photo Upload Box */}
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-ink uppercase tracking-wider">
-            {t.photoUploadTitle || 'Photo Evidence'}
-          </label>
-          
+        {/* PHOTO EVIDENCE: TWO-OPTION UPLOADER (CAMERA + DRAG & DROP) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <label className="block text-xs font-bold text-ink uppercase tracking-wider">
+              {t.photoUploadTitle || 'Photo Evidence'}
+            </label>
+            <span className="text-[11px] text-ink-muted">JPEG, PNG, WebP (Max 5MB)</span>
+          </div>
+
           {photoPreview ? (
-            <div className="relative rounded-md overflow-hidden border border-slate-200 max-h-56 bg-slate-900 flex items-center justify-center">
-              <img src={photoPreview} alt="Upload preview" className="max-h-56 w-full object-cover" />
-              <button
-                type="button"
-                onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 text-white hover:bg-slate-900 transition-colors"
-                title="Remove photo"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            /* Selected Photo Preview Card */
+            <div className="rounded-card border border-slate-200 overflow-hidden bg-slate-900 shadow-sm space-y-0">
+              <div className="relative max-h-64 bg-black flex items-center justify-center overflow-hidden">
+                <img 
+                  src={photoPreview} 
+                  alt="Incident Preview" 
+                  className="max-h-64 w-full object-contain"
+                />
+              </div>
+
+              {/* Photo Details & Action Bar */}
+              <div className="p-3 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="space-y-0.5 min-w-[140px]">
+                  <div className="font-semibold text-ink truncate max-w-xs flex items-center gap-1.5">
+                    <span className="text-brand">●</span>
+                    <span className="truncate">{photoFile?.name || 'Captured Photo'}</span>
+                  </div>
+                  <div className="text-[11px] text-ink-muted flex items-center gap-2 font-mono">
+                    <span>{formatFileSize(photoFile?.size)}</span>
+                    <span>•</span>
+                    <span className="capitalize font-sans bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded text-[10px]">
+                      {photoSource === 'camera' ? '📷 Camera Capture' : '📁 File Upload'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Replace</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 flex items-center gap-1 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
-            <label className="border-2 border-dashed border-slate-300 hover:border-brand rounded-card p-6 text-center flex flex-col items-center justify-center gap-2 cursor-pointer bg-surface hover:bg-brand-surface/30 transition-colors">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-brand">
-                <Upload className="w-5 h-5" />
+            /* Two-Option Action Area */
+            <div className="space-y-3">
+              {/* Responsive Option Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                
+                {/* 1. Take Photo Button (Native Camera) */}
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="p-4 rounded-card border-2 border-slate-200 hover:border-brand bg-white hover:bg-brand-surface/40 flex items-center justify-center gap-3 transition-all group cursor-pointer shadow-xs"
+                >
+                  <div className="w-10 h-10 rounded-full bg-brand/10 group-hover:bg-brand group-hover:text-white text-brand flex items-center justify-center transition-colors">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-xs font-bold text-ink group-hover:text-brand transition-colors">Take Photo</div>
+                    <div className="text-[11px] text-ink-muted">Open device camera</div>
+                  </div>
+                </button>
+
+                {/* 2. Upload Photo Button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-4 rounded-card border-2 border-slate-200 hover:border-brand bg-white hover:bg-brand-surface/40 flex items-center justify-center gap-3 transition-all group cursor-pointer shadow-xs"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-brand group-hover:text-white text-slate-700 flex items-center justify-center transition-colors">
+                    <Upload className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-xs font-bold text-ink group-hover:text-brand transition-colors">Upload Photo</div>
+                    <div className="text-[11px] text-ink-muted">Browse device files</div>
+                  </div>
+                </button>
+
               </div>
-              <span className="text-xs font-semibold text-ink">Click or drag photo evidence here</span>
-              <span className="text-[11px] text-ink-muted">{t.photoUploadSubtitle || 'PNG, JPG or WEBP (Max 5MB)'}</span>
-              <input 
-                type="file" 
-                accept="image/jpeg,image/png,image/webp" 
-                onChange={handlePhotoChange} 
-                className="hidden" 
-              />
-            </label>
+
+              {/* Desktop Drag-and-Drop Dropzone Box */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`hidden sm:flex border-2 border-dashed rounded-card p-6 text-center flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                  isDragging 
+                    ? 'border-brand bg-brand-surface/60 scale-[1.01]' 
+                    : 'border-slate-300 hover:border-brand bg-surface hover:bg-brand-surface/30'
+                }`}
+              >
+                <div className="w-9 h-9 rounded-full bg-white shadow-xs flex items-center justify-center text-brand">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <div className="text-xs font-semibold text-ink">
+                  {isDragging ? 'Drop photo here to attach' : 'Drag & drop photo here or click to browse'}
+                </div>
+                <div className="text-[11px] text-ink-muted">Supports JPEG, PNG, or WebP up to 5MB</div>
+              </div>
+            </div>
           )}
         </div>
 

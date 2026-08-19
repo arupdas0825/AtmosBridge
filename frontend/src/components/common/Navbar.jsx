@@ -20,7 +20,8 @@ import {
   User,
   Activity,
   Sparkles,
-  Check
+  Check,
+  Building2
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -39,63 +40,81 @@ export default function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const [regionMenuOpen, setRegionMenuOpen] = useState(false);
+  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
 
   const moreRef = useRef(null);
-  const regionRef = useRef(null);
+  const roleRef = useRef(null);
+  const langRef = useRef(null);
 
-  // Close popovers on click outside
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (moreRef.current && !moreRef.current.contains(event.target)) {
-        setMoreMenuOpen(false);
-      }
-      if (regionRef.current && !regionRef.current.contains(event.target)) {
-        setRegionMenuOpen(false);
-      }
+      if (moreRef.current && !moreRef.current.contains(event.target)) setMoreMenuOpen(false);
+      if (roleRef.current && !roleRef.current.contains(event.target)) setRoleMenuOpen(false);
+      if (langRef.current && !langRef.current.contains(event.target)) setLangMenuOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Primary demo-critical nav items (Map, Report, Hotspots, Authority) + responsive items (Forecast, Cross-Border)
+  // Primary Navigation Items
   const primaryNavItems = [
-    { id: 'map', label: t.navMap || 'Map', icon: MapIcon },
-    { id: 'report', label: t.navReport || 'Report', icon: PlusCircle },
-    { id: 'hotspots', label: t.navHotspots || 'Hotspots', icon: Flame },
-    { id: 'predictions', label: t.navPredictions || 'Forecast', icon: TrendingUp, hideOnTablet: true },
-    { id: 'crossborder', label: t.navCrossBorder || 'Cross-Border', icon: Globe2, hideOnTablet: true },
+    { id: 'map', label: 'BRICS Map', icon: MapIcon },
+    { id: 'report', label: 'Report Incident', icon: PlusCircle },
+    { id: 'hotspots', label: 'Hotspots', icon: Flame },
+    { id: 'predictions', label: 'Forecasting', icon: TrendingUp },
+    { id: 'crossborder', label: 'Cross-Border', icon: Globe2 },
     { id: 'authority', label: 'Authority', icon: Bell, badge: pendingAlertsCount },
   ];
 
-  // Secondary overflow items
+  // Secondary "More" Items (NO DUPLICATES of primary nav items)
   const secondaryNavItems = [
-    { id: 'predictions', label: t.navPredictions || 'Atmospheric Forecast', icon: TrendingUp, desc: '6h/12h/24h ML spike prediction', tabletOnly: true },
-    { id: 'crossborder', label: t.navCrossBorder || 'Cross-Border Drift', icon: Globe2, desc: 'Trans-boundary plume models', tabletOnly: true },
-    { id: 'landing', label: 'Overview & Mission', icon: Sparkles, desc: 'Public portal & BRICS mission' },
+    { id: 'landing', label: 'Overview & Mission', icon: Sparkles, desc: 'Public portal & federated intelligence' },
     { id: 'local-intelligence', label: 'Local Air Intelligence', icon: Activity, desc: 'Hyperlocal AQI & health guidance' },
-    { id: 'analytics', label: t.navAnalytics || 'Analytics & Trends', icon: BarChart3, desc: 'Historical trends & CSV export' },
-    { id: 'datasources', label: t.navSources || 'Data Sources', icon: Database, desc: 'Telemetry provenance registry' },
-    { id: 'about', label: 'About & Responsible AI', icon: Info, desc: 'Governance principles & audit trail' },
-    { id: 'settings', label: 'Settings & Config', icon: SettingsIcon, desc: 'Airshed & interface preferences' },
+    { id: 'analytics', label: 'Analytics & Trends', icon: BarChart3, desc: 'Historical telemetry & spatial trends' },
+    { id: 'datasources', label: 'Data Sources', icon: Database, desc: 'Telemetry provenance registry' },
+    { id: 'about', label: 'Responsible AI', icon: Info, desc: 'Governance principles & audit trail' },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon, desc: 'Airshed & interface preferences' },
   ];
 
-  const currentCountryObj = BRICS_COUNTRIES.find(c => c.id === activeCountry) || BRICS_COUNTRIES[0];
+  const roles = [
+    { id: 'citizen', label: 'Citizen', desc: 'Observe & submit sightings' },
+    { id: 'authority', label: 'Authority', desc: 'Triage & dispatch response' },
+    { id: 'analyst', label: 'Analyst', desc: 'Meteorology & ML forecasting' },
+    { id: 'coordinator', label: 'Coordinator', desc: 'Bilateral cross-border protocol' },
+  ];
+
+  const languages = [
+    { code: 'en', label: 'English', flag: '🌐' },
+    { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
+    { code: 'pt', label: 'Português', flag: '🇧🇷' },
+    { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+    { code: 'zh', label: '中文', flag: '🇨🇳' },
+  ];
+
+  const currentLangObj = languages.find(l => l.code === language) || languages[0];
+
+  const handleNavClick = (screenId) => {
+    navigateTo(screenId);
+    setMobileMenuOpen(false);
+    setMoreMenuOpen(false);
+  };
 
   return (
-    <header className="sticky top-0 z-40 glass-nav shadow-sm font-sans select-none">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 font-sans select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-3">
           
-          {/* 1. Left: Logo & Wordmark */}
+          {/* 1. Left: Logo & Wordmark (No BRICS AI badge) */}
           <div 
             className="flex items-center gap-2.5 cursor-pointer flex-shrink-0 group" 
-            onClick={() => navigateTo('landing')}
+            onClick={() => handleNavClick('landing')}
           >
-            <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-200/80 shadow-xs flex items-center justify-center bg-brand flex-shrink-0 group-hover:border-brand transition-colors">
+            <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-200 shadow-xs flex items-center justify-center bg-brand flex-shrink-0 group-hover:border-brand transition-colors">
               <img 
                 src={logoImg} 
-                alt="AtmosBridge" 
+                alt="AtmosBridge logo" 
                 className="w-full h-full object-cover"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
@@ -105,42 +124,41 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* 2. Center: Clean, Borderless Primary Nav Links Group */}
-          <nav className="hidden md:flex items-center gap-0.5 lg:gap-1">
+          {/* 2. Center: Primary Navigation (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-1">
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentScreen === item.id;
-              const isTabletHidden = item.hideOnTablet ? 'hidden xl:flex' : 'flex';
 
               return (
                 <button
                   key={item.id}
-                  onClick={() => navigateTo(item.id)}
-                  className={`relative ${isTabletHidden} items-center gap-1.5 px-2.5 lg:px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                  onClick={() => handleNavClick(item.id)}
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
                     isActive 
-                      ? 'text-brand bg-brand/10 font-bold' 
-                      : 'text-ink-muted hover:text-ink hover:bg-slate-100/60'
+                      ? 'text-brand bg-brand-surface font-bold border border-brand/20 shadow-xs' 
+                      : 'text-ink-muted hover:text-ink hover:bg-slate-100/70'
                   }`}
                 >
-                  <div className="relative">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-brand' : 'text-slate-500'}`} />
-                    {item.badge > 0 && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
-                    )}
-                  </div>
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-brand' : 'text-slate-500'}`} />
                   <span>{item.label}</span>
+                  {item.badge > 0 && (
+                    <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-risk-critical text-white">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
 
-            {/* Overflow "More" Button */}
+            {/* More ▾ Dropdown */}
             <div className="relative" ref={moreRef}>
               <button
                 onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
                   secondaryNavItems.some(i => i.id === currentScreen)
-                    ? 'text-brand bg-brand/10 font-bold'
-                    : 'text-ink-muted hover:text-ink hover:bg-slate-100/60'
+                    ? 'text-brand bg-brand-surface font-bold border border-brand/20'
+                    : 'text-ink-muted hover:text-ink hover:bg-slate-100/70'
                 }`}
                 aria-expanded={moreMenuOpen}
               >
@@ -148,29 +166,27 @@ export default function Navbar() {
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${moreMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
+              {/* Secondary Navigation Dropdown */}
               {moreMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 glass-popover py-2 z-50 animate-in fade-in-50 duration-150">
-                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Extended Intelligence
+                <div className="absolute right-0 mt-2 w-64 rounded-card bg-white border border-slate-200 shadow-modal p-2 space-y-1 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-2 py-1 text-[10px] font-bold text-ink-muted uppercase tracking-wider border-b border-slate-100">
+                    Secondary Tools & Mission
                   </div>
-                  {secondaryNavItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentScreen === item.id;
+                  {secondaryNavItems.map((sec) => {
+                    const SecIcon = sec.icon;
+                    const isSecActive = currentScreen === sec.id;
                     return (
                       <button
-                        key={item.id}
-                        onClick={() => {
-                          navigateTo(item.id);
-                          setMoreMenuOpen(false);
-                        }}
-                        className={`w-full flex items-start gap-2.5 px-3 py-2 text-left text-xs transition-colors ${
-                          isActive ? 'bg-brand-surface text-brand font-semibold' : 'text-ink hover:bg-surface'
+                        key={sec.id}
+                        onClick={() => handleNavClick(sec.id)}
+                        className={`w-full flex items-start gap-2.5 p-2 rounded-lg text-left transition-colors text-xs ${
+                          isSecActive ? 'bg-brand-surface text-brand font-semibold' : 'hover:bg-slate-50 text-ink'
                         }`}
                       >
-                        <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isActive ? 'text-brand' : 'text-slate-400'}`} />
+                        <SecIcon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isSecActive ? 'text-brand' : 'text-slate-500'}`} />
                         <div>
-                          <div className="font-semibold text-ink">{item.label}</div>
-                          <div className="text-[11px] text-ink-muted leading-tight">{item.desc}</div>
+                          <div className="font-medium leading-tight">{sec.label}</div>
+                          <div className="text-[10px] text-ink-muted leading-tight mt-0.5">{sec.desc}</div>
                         </div>
                       </button>
                     );
@@ -180,255 +196,177 @@ export default function Navbar() {
             </div>
           </nav>
 
-          {/* 3. Right: Unified Control Bar (Single Pill Container) */}
-          <div className="hidden sm:flex items-center">
+          {/* 3. Right: User Role & Language Controls */}
+          <div className="hidden sm:flex items-center gap-2">
             
-            <div className="glass-control-bar flex items-center px-1 py-0.5 text-xs shadow-xs">
-              
-              {/* Segment A: Persona Role Switcher */}
-              <div className="flex items-center gap-0.5">
-                <button
-                  onClick={() => { setActiveRole('citizen'); navigateTo('report'); }}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                    activeRole === 'citizen' ? 'bg-white shadow-xs text-brand font-bold' : 'text-ink-muted hover:text-ink'
-                  }`}
-                  title="Citizen Persona"
-                >
-                  <User className="w-3 h-3" />
-                  <span>Citizen</span>
-                </button>
+            {/* Role Switcher Pill */}
+            <div className="relative" ref={roleRef}>
+              <button
+                onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+                className="px-2.5 py-1 rounded-full text-xs font-semibold bg-surface hover:bg-slate-200/60 border border-slate-200 text-ink flex items-center gap-1.5 transition-colors"
+              >
+                <Shield className="w-3.5 h-3.5 text-brand" />
+                <span className="capitalize">{activeRole}</span>
+                <ChevronDown className="w-3 h-3 text-ink-muted" />
+              </button>
 
-                <button
-                  onClick={() => { setActiveRole('authority'); navigateTo('authority'); }}
-                  className={`relative flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                    activeRole === 'authority' ? 'bg-white shadow-xs text-brand font-bold' : 'text-ink-muted hover:text-ink'
-                  }`}
-                  title="Municipal Authority Persona"
-                >
-                  <Shield className="w-3 h-3" />
-                  <span>Authority</span>
-                  {pendingAlertsCount > 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
-                  )}
-                </button>
-              </div>
-
-              {/* Subtle Divider */}
-              <div className="h-4 w-[1px] bg-slate-300/80 mx-1.5" />
-
-              {/* Segment B: Airshed Region & Language Popover Trigger */}
-              <div className="relative" ref={regionRef}>
-                <button
-                  onClick={() => setRegionMenuOpen(!regionMenuOpen)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold text-ink hover:text-brand transition-colors"
-                  title="Select BRICS Airshed & Language"
-                >
-                  <Globe2 className="w-3.5 h-3.5 text-brand" />
-                  <span className="truncate max-w-[65px]">
-                    {activeCountry === 'all' ? 'BRICS' : currentCountryObj.name}
-                  </span>
-                  <span className="font-mono text-[10px] uppercase font-bold text-slate-500">
-                    {language}
-                  </span>
-                  <ChevronDown className="w-3 h-3 text-slate-400" />
-                </button>
-
-                {regionMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-60 glass-popover p-3 z-50 space-y-3 animate-in fade-in-50 duration-150">
-                    
-                    {/* Region Selection */}
-                    <div className="space-y-1.5">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        BRICS Airshed Node
-                      </div>
-                      <div className="space-y-0.5">
-                        {BRICS_COUNTRIES.map((c) => (
-                          <button
-                            key={c.id}
-                            onClick={() => {
-                              setActiveCountry(c.id);
-                              setRegionMenuOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs text-left transition-colors ${
-                              activeCountry === c.id 
-                                ? 'bg-brand text-white font-semibold' 
-                                : 'text-ink hover:bg-surface'
-                            }`}
-                          >
-                            <span>{c.name}</span>
-                            {activeCountry === c.id && <Check className="w-3.5 h-3.5" />}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Language Selection */}
-                    <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Language
-                      </div>
-                      <div className="grid grid-cols-3 gap-1">
-                        {[
-                          { id: 'en', label: 'EN' },
-                          { id: 'hi', label: 'हिन्दी' },
-                          { id: 'bn', label: 'বাংলা' }
-                        ].map((lang) => (
-                          <button
-                            key={lang.id}
-                            onClick={() => {
-                              setLanguage(lang.id);
-                              setRegionMenuOpen(false);
-                            }}
-                            className={`py-1 text-xs rounded-full text-center transition-colors font-medium ${
-                              language === lang.id
-                                ? 'bg-brand text-white font-bold'
-                                : 'bg-surface text-ink hover:bg-slate-200'
-                            }`}
-                          >
-                            {lang.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
+              {roleMenuOpen && (
+                <div className="absolute right-0 mt-2 w-52 rounded-card bg-white border border-slate-200 shadow-modal p-1.5 space-y-1 z-50">
+                  <div className="px-2 py-1 text-[10px] font-bold text-ink-muted uppercase tracking-wider border-b border-slate-100">
+                    Switch Active Persona
                   </div>
-                )}
-              </div>
+                  {roles.map((r) => (
+                    <button
+                      key={r.id}
+                      onClick={() => { setActiveRole(r.id); setRoleMenuOpen(false); }}
+                      className={`w-full flex items-center justify-between p-2 rounded-md text-left text-xs transition-colors ${
+                        activeRole === r.id ? 'bg-brand/10 text-brand font-semibold' : 'hover:bg-slate-50 text-ink'
+                      }`}
+                    >
+                      <div>
+                        <div className="capitalize">{r.label}</div>
+                        <div className="text-[10px] text-ink-muted">{r.desc}</div>
+                      </div>
+                      {activeRole === r.id && <Check className="w-3.5 h-3.5 text-brand flex-shrink-0" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
+            {/* Language Selector */}
+            <div className="relative" ref={langRef}>
+              <button
+                onClick={() => setLangMenuOpen(!langMenuOpen)}
+                className="px-2.5 py-1 rounded-full text-xs font-semibold bg-surface hover:bg-slate-200/60 border border-slate-200 text-ink flex items-center gap-1.5 transition-colors font-mono"
+              >
+                <span>{currentLangObj.flag}</span>
+                <span>{currentLangObj.code.toUpperCase()}</span>
+                <ChevronDown className="w-3 h-3 text-ink-muted" />
+              </button>
+
+              {langMenuOpen && (
+                <div className="absolute right-0 mt-2 w-36 rounded-card bg-white border border-slate-200 shadow-modal p-1 space-y-0.5 z-50">
+                  {languages.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => { setLanguage(l.code); setLangMenuOpen(false); }}
+                      className={`w-full flex items-center justify-between p-1.5 rounded-md text-left text-xs transition-colors ${
+                        language === l.code ? 'bg-brand/10 text-brand font-semibold' : 'hover:bg-slate-50 text-ink'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span>{l.flag}</span>
+                        <span>{l.label}</span>
+                      </span>
+                      {language === l.code && <Check className="w-3 h-3 text-brand" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>
 
-          {/* 4. Mobile Menu Trigger + Alert Icon */}
-          <div className="flex md:hidden items-center gap-1.5">
-            {pendingAlertsCount > 0 && (
-              <button
-                onClick={() => navigateTo('authority')}
-                className="relative p-1.5 rounded-full text-ink-muted hover:text-ink"
-                title={`${pendingAlertsCount} Pending Alerts`}
-              >
-                <Bell className="w-5 h-5 text-brand" />
-                <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-risk-critical animate-pulse" />
-              </button>
-            )}
-
+          {/* 4. Mobile Menu Hamburger Button */}
+          <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-full text-ink-muted hover:text-ink hover:bg-slate-100/60"
+              className="p-2 rounded-lg bg-surface text-ink hover:bg-slate-200 border border-slate-200 transition-colors"
               aria-label="Toggle Navigation Menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
 
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Slide-down Navigation Sheet */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white/98 backdrop-blur-lg border-b border-slate-200 px-4 pt-3 pb-6 space-y-4 shadow-lg animate-in slide-in-from-top-2 duration-150">
+        <div className="lg:hidden border-t border-slate-200 bg-white/95 backdrop-blur-xl px-4 py-6 space-y-6 shadow-xl animate-in slide-in-from-top-3 duration-200">
           
-          {/* Persona Role Switcher */}
-          <div className="glass-control-bar flex items-center justify-center p-0.5 max-w-xs mx-auto text-xs">
-            <button
-              onClick={() => { setActiveRole('citizen'); navigateTo('report'); setMobileMenuOpen(false); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                activeRole === 'citizen' ? 'bg-white shadow-xs text-brand font-bold' : 'text-ink-muted hover:text-ink'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Citizen</span>
-            </button>
-            <button
-              onClick={() => { setActiveRole('authority'); navigateTo('authority'); setMobileMenuOpen(false); }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                activeRole === 'authority' ? 'bg-white shadow-xs text-brand font-bold' : 'text-ink-muted hover:text-ink'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>Authority</span>
-              {pendingAlertsCount > 0 && (
-                <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
-              )}
-            </button>
-          </div>
-
-          {/* Primary Nav List */}
-          <div className="grid grid-cols-2 gap-2">
-            {primaryNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentScreen === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    navigateTo(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`flex items-center gap-2 p-2.5 rounded-full text-xs font-semibold text-left transition-colors ${
-                    isActive ? 'bg-brand text-white' : 'bg-surface text-ink hover:bg-slate-200/80'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">{item.label}</span>
-                  {item.badge > 0 && (
-                    <span className="ml-auto w-2 h-2 rounded-full bg-risk-critical" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Secondary Nav Links */}
-          <div className="pt-3 border-t border-slate-100">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-              More Intelligence
+          {/* Primary Modules */}
+          <div className="space-y-1">
+            <div className="text-[10px] font-bold text-ink-muted uppercase tracking-wider px-2">
+              Primary Intelligence
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {secondaryNavItems.filter(i => !i.tabletOnly).map((item) => {
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              {primaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentScreen === item.id;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      navigateTo(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`flex items-center gap-2 p-2 rounded-lg text-xs font-medium text-left ${
-                      isActive ? 'bg-brand-surface text-brand font-semibold' : 'text-ink-muted hover:text-ink hover:bg-surface'
+                    onClick={() => handleNavClick(item.id)}
+                    className={`flex items-center gap-2 p-2.5 rounded-card text-xs font-semibold text-left transition-colors ${
+                      isActive ? 'bg-brand text-white shadow-xs' : 'bg-surface text-ink hover:bg-slate-200'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                    <Icon className="w-4 h-4 flex-shrink-0" />
                     <span className="truncate">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="ml-auto px-1.5 py-0.2 rounded-full text-[10px] bg-rose-500 text-white font-mono">
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Region & Language Selector */}
-          <div className="pt-3 border-t border-slate-100 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-ink-muted font-medium">BRICS Airshed:</span>
+          {/* Secondary Utilities */}
+          <div className="space-y-1">
+            <div className="text-[10px] font-bold text-ink-muted uppercase tracking-wider px-2">
+              Secondary Tools & Settings
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+              {secondaryNavItems.map((sec) => {
+                const SecIcon = sec.icon;
+                const isSecActive = currentScreen === sec.id;
+                return (
+                  <button
+                    key={sec.id}
+                    onClick={() => handleNavClick(sec.id)}
+                    className={`flex items-center gap-2 p-2 rounded-md text-xs text-left transition-colors ${
+                      isSecActive ? 'bg-brand/10 text-brand font-semibold' : 'text-ink-muted hover:text-ink hover:bg-slate-50'
+                    }`}
+                  >
+                    <SecIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{sec.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Persona & Language Bar */}
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-ink-muted font-medium">Role:</span>
               <select
-                value={activeCountry}
-                onChange={(e) => setActiveCountry(e.target.value)}
-                className="select-control text-xs"
+                value={activeRole}
+                onChange={(e) => setActiveRole(e.target.value)}
+                className="text-xs bg-surface border border-slate-200 rounded-md px-2 py-1 text-ink capitalize"
               >
-                {BRICS_COUNTRIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                {roles.map(r => (
+                  <option key={r.id} value={r.id}>{r.label}</option>
                 ))}
               </select>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-ink-muted font-medium">Language:</span>
-              <div className="flex gap-1">
-                <button onClick={() => setLanguage('en')} className={`px-3 py-1 text-xs rounded-full font-semibold ${language === 'en' ? 'bg-brand text-white' : 'bg-surface text-ink'}`}>EN</button>
-                <button onClick={() => setLanguage('hi')} className={`px-3 py-1 text-xs rounded-full font-semibold ${language === 'hi' ? 'bg-brand text-white' : 'bg-surface text-ink'}`}>हिन्दी</button>
-                <button onClick={() => setLanguage('bn')} className={`px-3 py-1 text-xs rounded-full font-semibold ${language === 'bn' ? 'bg-brand text-white' : 'bg-surface text-ink'}`}>বাংলা</button>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-ink-muted font-medium">Lang:</span>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="text-xs bg-surface border border-slate-200 rounded-md px-2 py-1 text-ink"
+              >
+                {languages.map(l => (
+                  <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
