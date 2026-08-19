@@ -5,6 +5,7 @@ import ProvenanceTag from '../components/common/ProvenanceTag';
 import Loader from '../components/common/Loader';
 import EmptyState from '../components/common/EmptyState';
 import { getHotspots } from '../lib/api';
+import { BRICS_COUNTRIES } from '../lib/constants';
 import { 
   Flame, 
   Search, 
@@ -15,7 +16,9 @@ import {
   Clock, 
   ChevronRight,
   ShieldAlert,
-  ArrowUpDown
+  ArrowUpDown,
+  Sparkles,
+  Globe2
 } from 'lucide-react';
 
 export default function HotspotExplorer() {
@@ -44,14 +47,17 @@ export default function HotspotExplorer() {
 
   // Filter & search
   const filteredHotspots = hotspots.filter(h => {
-    const matchesSearch = h.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          h.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          h.summary.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSeverity = severityFilter === 'all' || h.severity.toString() === severityFilter;
+    const matchesSearch = !searchQuery || 
+      h.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      h.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      h.country?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      h.summary?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesSeverity = severityFilter === 'all' || h.severity?.toString() === severityFilter;
     return matchesSearch && matchesSeverity;
   }).sort((a, b) => {
-    if (sortBy === 'risk_desc') return b.risk_score - a.risk_score;
-    if (sortBy === 'pop_desc') return b.affected_population_estimate - a.affected_population_estimate;
+    if (sortBy === 'risk_desc') return (b.risk_score || 0) - (a.risk_score || 0);
+    if (sortBy === 'pop_desc') return (b.affected_population_estimate || 0) - (a.affected_population_estimate || 0);
     return 0;
   });
 
@@ -74,6 +80,31 @@ export default function HotspotExplorer() {
         </p>
       </div>
 
+      {/* Country Selection Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 text-xs">
+        <span className="text-ink-muted font-bold text-[11px] uppercase mr-1 flex items-center gap-1">
+          <Globe2 className="w-3.5 h-3.5 text-brand" />
+          <span>Airshed:</span>
+        </span>
+        {BRICS_COUNTRIES.map((c) => {
+          const isSelected = activeCountry === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setActiveCountry(c.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                isSelected
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-surface hover:bg-slate-200 text-ink-muted'
+              }`}
+            >
+              <span>{c.flag}</span>
+              <span>{c.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filter & Search Toolbar */}
       <div className="card-surface p-4 flex flex-wrap items-center justify-between gap-3">
         
@@ -84,7 +115,7 @@ export default function HotspotExplorer() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by location, source, or city..."
+            placeholder="Search by location, source, city or pollutant..."
             className="input-control text-xs pl-9"
           />
         </div>
@@ -126,9 +157,9 @@ export default function HotspotExplorer() {
       ) : filteredHotspots.length === 0 ? (
         <EmptyState
           title="No hotspots matched your query"
-          description="Try selecting another BRICS country airshed or adjusting your search filters."
+          description="Try selecting 'All Airsheds' or adjusting your search keywords."
           actionText="Reset Filters"
-          onAction={() => { setSearchQuery(''); setSeverityFilter('all'); }}
+          onAction={() => { setSearchQuery(''); setSeverityFilter('all'); setActiveCountry('all'); }}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

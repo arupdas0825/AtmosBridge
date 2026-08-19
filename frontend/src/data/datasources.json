@@ -1,0 +1,74 @@
+[
+  {
+    "id": "src_openaq",
+    "name": "OpenAQ Global Air Quality Network",
+    "type": "ground_sensor",
+    "coverage": "BRICS Airsheds (India, Brazil, South Africa, China, Russia)",
+    "parameters": ["PM2.5", "PM10", "NO2", "SO2", "O3", "CO"],
+    "update_frequency": "Hourly",
+    "provenance_classification": "observed",
+    "license": "CC BY 4.0 / Open Data",
+    "latency": "~15-60 min",
+    "status": "active"
+  },
+  {
+    "id": "src_openmeteo",
+    "name": "Open-Meteo Atmospheric Boundary Model",
+    "type": "meteorological_reanalysis",
+    "coverage": "Global (0.1° resolution)",
+    "parameters": ["Wind Speed", "Wind Direction", "Boundary Layer Height", "Humidity", "Temperature"],
+    "update_frequency": "Hourly",
+    "provenance_classification": "observed",
+    "license": "Non-Commercial / Open Database",
+    "latency": "Real-time",
+    "status": "active"
+  },
+  {
+    "id": "src_modis",
+    "name": "NASA FIRMS MODIS / VIIRS Active Fire Telemetry",
+    "type": "satellite_aerosol",
+    "coverage": "Global Near Real-Time",
+    "parameters": ["Thermal Hotspots", "Aerosol Optical Depth (AOD)", "Fire Radiative Power (FRP)"],
+    "update_frequency": "Twice daily (overpass)",
+    "provenance_classification": "simulated",
+    "license": "NASA Open Access",
+    "latency": "~3 hours",
+    "status": "active"
+  },
+  {
+    "id": "src_gemini",
+    "name": "Google Gemini 2.5 Flash Multimodal Vision Engine",
+    "type": "ai_inference",
+    "coverage": "Citizen Submitted Evidence Pipeline",
+    "parameters": ["Particulate Plume Classification", "Combustion Source Extraction", "Visual Confidence Score"],
+    "update_frequency": "On-Demand (Per Report)",
+    "provenance_classification": "inferred",
+    "license": "Google Gemini Enterprise API",
+    "latency": "< 2 seconds",
+    "status": "active"
+  },
+  {
+    "id": "src_xgboost",
+    "name": "Physics-Grounded Atmospheric XGBoost Regressor",
+    "type": "predictive_model",
+    "coverage": "Active BRICS Hotspot Airsheds",
+    "parameters": ["6h / 12h / 24h AQI Outlook", "Spike Probability", "Uncertainty Lower/Upper Bounds"],
+    "update_frequency": "Continuous Rolling Horizon",
+    "provenance_classification": "predicted",
+    "license": "Proprietary AtmosBridge Core",
+    "latency": "< 100 ms",
+    "status": "active"
+  },
+  {
+    "id": "src_hysplit_dispersion",
+    "name": "Lagrangian Atmospheric Plume Dispersion Simulator",
+    "type": "simulated_transport",
+    "coverage": "Transboundary Cross-Border Corridors",
+    "parameters": ["Plume Dispersion Polygons", "Aerosol Transit Window", "Bilateral Exposure Estimate"],
+    "update_frequency": "6-Hour Atmospheric Cycles",
+    "provenance_classification": "simulated",
+    "license": "AtmosBridge Transport Core",
+    "latency": "< 150 ms",
+    "status": "active"
+  }
+]

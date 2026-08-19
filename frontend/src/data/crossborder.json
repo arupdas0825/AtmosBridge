@@ -1,0 +1,137 @@
+[
+  {
+    "id": "xb_punjab_lahore_01",
+    "title": "Agricultural Crop Residue Drift Corridor",
+    "source_region": "Punjab Agricultural Belt (India)",
+    "target_region": "Lahore Metropolitan District & Punjab Border (Pakistan / Regional Corridor)",
+    "country_source": "India",
+    "country_target": "Pakistan / Cross-Border Grid",
+    "pollutant_type": "Biomass Smoke (PM2.5, PM10 & Carbon Monoxide)",
+    "wind_vector": {
+      "speed_kmh": 14.2,
+      "bearing_deg": 115,
+      "direction": "ESE"
+    },
+    "estimated_arrival_window": "3.5 to 5.0 hours (14:30 – 16:00 UTC)",
+    "confidence": 0.88,
+    "plume_polygon": [
+      [31.45, 74.20],
+      [31.75, 74.55],
+      [31.85, 75.10],
+      [31.35, 75.30],
+      [31.10, 74.60]
+    ],
+    "recommended_crossborder_action": "Issue bilateral trans-boundary advisory; coordinate localized agricultural fire suppression and trigger clean-air air filtration shelters in border settlements.",
+    "provenance": "predicted",
+    "status": "active",
+    "last_updated": "2026-08-19T15:11:26+00:00"
+  },
+  {
+    "id": "xb_amazon_mercosur_02",
+    "title": "Amazon Southern Arc Biomass Haze Drift",
+    "source_region": "Mato Grosso Deforestation & Agricultural Frontier (Brazil)",
+    "target_region": "Paraguay Chaco & Northern Argentina Border",
+    "country_source": "Brazil",
+    "country_target": "Paraguay / Argentina (Mercosur Shared Airshed)",
+    "pollutant_type": "Dense Forest & Pasture Smoke (AOD > 1.2)",
+    "wind_vector": {
+      "speed_kmh": 18.0,
+      "bearing_deg": 195,
+      "direction": "SSW"
+    },
+    "estimated_arrival_window": "8.0 to 12.0 hours",
+    "confidence": 0.84,
+    "plume_polygon": [
+      [-14.0, -56.0],
+      [-17.0, -58.0],
+      [-22.0, -59.5],
+      [-21.0, -56.5],
+      [-16.0, -53.0]
+    ],
+    "recommended_crossborder_action": "Activate Mercosur Environmental Emergency Protocol; share real-time aerosol trajectory with Asunción and Buenos Aires meteorological institutes.",
+    "provenance": "predicted",
+    "status": "active",
+    "last_updated": "2026-08-19T15:11:26+00:00"
+  },
+  {
+    "id": "xb_amur_china_03",
+    "title": "Amur Basin Industrial & Wildfire Aerosol Trans-Boundary Drift",
+    "source_region": "Amur Oblast Industrial & Forestry Belt (Russia)",
+    "target_region": "Heilongjiang Province Border (China)",
+    "country_source": "Russia",
+    "country_target": "China (Amur / Heilongjiang River Airshed)",
+    "pollutant_type": "Industrial Sulfur & Forestry Smoke (PM2.5 & SO2)",
+    "wind_vector": {
+      "speed_kmh": 11.5,
+      "bearing_deg": 140,
+      "direction": "SE"
+    },
+    "estimated_arrival_window": "4.0 to 6.5 hours",
+    "confidence": 0.82,
+    "plume_polygon": [
+      [50.40, 127.30],
+      [50.55, 127.80],
+      [50.10, 128.20],
+      [49.85, 127.70],
+      [50.05, 127.10]
+    ],
+    "recommended_crossborder_action": "Share telemetry via Far East BRICS Environmental Monitoring Network; notify regional emergency management in Heihe and Blagoveshchensk.",
+    "provenance": "predicted",
+    "status": "active",
+    "last_updated": "2026-08-19T15:11:26+00:00"
+  },
+  {
+    "id": "xb_beijing_yellowsea_04",
+    "title": "Bohai Bay & Yellow Sea Atmospheric Pollution Trans-Boundary Corridor",
+    "source_region": "Hebei Heavy Industrial Corridor (China)",
+    "target_region": "Yellow Sea Maritime & Korean Peninsula Airshed",
+    "country_source": "China",
+    "country_target": "Maritime Yellow Sea & Regional Airshed",
+    "pollutant_type": "Heavy Steel & Coal Combustion Haze (PM2.5 & NO2)",
+    "wind_vector": {
+      "speed_kmh": 16.5,
+      "bearing_deg": 105,
+      "direction": "ESE"
+    },
+    "estimated_arrival_window": "6.0 to 9.0 hours",
+    "confidence": 0.89,
+    "plume_polygon": [
+      [39.80, 117.20],
+      [39.90, 119.50],
+      [38.20, 122.00],
+      [37.40, 121.20],
+      [38.50, 117.80]
+    ],
+    "recommended_crossborder_action": "Deploy Yellow Sea marine aerosol monitors and issue joint maritime visibility advisories.",
+    "provenance": "predicted",
+    "status": "active",
+    "last_updated": "2026-08-19T15:11:26+00:00"
+  },
+  {
+    "id": "xb_highveld_mozambique_05",
+    "title": "Highveld Power Corridor Trans-Boundary Emission Drift",
+    "source_region": "Mpumalanga Power & Coal Belt (South Africa)",
+    "target_region": "Eswatini & Southern Mozambique Coastal Plain",
+    "country_source": "South Africa",
+    "country_target": "Eswatini & Mozambique (SADC Clean Air Network)",
+    "pollutant_type": "Coal Power & Mining Particulates (SO2 & PM2.5)",
+    "wind_vector": {
+      "speed_kmh": 15.0,
+      "bearing_deg": 95,
+      "direction": "E"
+    },
+    "estimated_arrival_window": "4.5 to 7.0 hours",
+    "confidence": 0.85,
+    "plume_polygon": [
+      [-25.80, 29.30],
+      [-25.50, 31.00],
+      [-25.90, 32.80],
+      [-26.60, 32.20],
+      [-26.40, 29.80]
+    ],
+    "recommended_crossborder_action": "Notify SADC regional air quality hub; trigger cross-border health advisories for high-risk respiratory populations.",
+    "provenance": "predicted",
+    "status": "active",
+    "last_updated": "2026-08-19T15:11:26+00:00"
+  }
+]

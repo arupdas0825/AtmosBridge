@@ -23,8 +23,6 @@ import {
   Building2,
   RefreshCw,
   AlertTriangle,
-  Radio,
-  Layers,
   ArrowRight
 } from 'lucide-react';
 
@@ -135,15 +133,15 @@ export default function Navbar() {
       {/* Dynamic Navbar: Purpose-built for Citizen vs. Authority */}
       <header className={`sticky top-0 z-40 font-sans select-none border-b transition-colors duration-200 ${
         isAuthority 
-          ? 'bg-slate-900/95 text-white border-slate-800 backdrop-blur-md shadow-md' 
-          : 'bg-white/90 text-ink border-slate-200/80 backdrop-blur-md shadow-sm'
+          ? 'bg-slate-900 text-white border-slate-800 backdrop-blur-md shadow-md' 
+          : 'bg-white/95 text-ink border-slate-200 backdrop-blur-md shadow-sm'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-3">
+          <div className="flex items-center justify-between h-16 gap-4">
             
             {/* 1. Left: Brand & Surface Identity */}
             <div 
-              className="flex items-center gap-2.5 cursor-pointer flex-shrink-0 group" 
+              className="flex items-center gap-3 cursor-pointer flex-shrink-0 group" 
               onClick={() => handleNavClick(isAuthority ? 'authority' : 'landing')}
             >
               <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/20 shadow-xs flex items-center justify-center bg-brand flex-shrink-0">
@@ -154,20 +152,24 @@ export default function Navbar() {
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className={`font-extrabold text-lg tracking-tight ${isAuthority ? 'text-white' : 'text-ink'}`}>
+              
+              <div className="flex items-center gap-2">
+                <span className={`font-extrabold text-base sm:text-lg tracking-tight ${isAuthority ? 'text-white' : 'text-ink'}`}>
                   AtmosBridge
                 </span>
                 {isAuthority && (
-                  <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-brand text-white font-bold tracking-wider border border-teal-600/40">
-                    COMMAND CENTER
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-500 font-bold hidden sm:inline">|</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-slate-800 text-teal-300 font-bold tracking-wider border border-teal-500/30">
+                      COMMAND CENTER
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* 2. Center: Primary Surface Navigation (Desktop) */}
-            <nav className="hidden lg:flex items-center gap-1">
+            {/* 2. Center: Primary Surface Navigation (Desktop) with Comfortable Spacing */}
+            <nav className="hidden xl:flex items-center gap-2">
               {(isAuthority ? authorityPrimaryNav : citizenPrimaryNav).map((item) => {
                 const Icon = item.icon;
                 const isActive = currentScreen === item.id;
@@ -176,7 +178,7 @@ export default function Navbar() {
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
-                    className={`relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
                       isAuthority
                         ? isActive 
                           ? 'text-white bg-teal-800/60 font-bold border border-teal-500/40 shadow-xs' 
@@ -186,7 +188,7 @@ export default function Navbar() {
                           : 'text-ink-muted hover:text-ink hover:bg-slate-100/70'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${
+                    <Icon className={`w-3.5 h-3.5 ${
                       isActive 
                         ? isAuthority ? 'text-teal-400' : 'text-brand' 
                         : isAuthority ? 'text-slate-400' : 'text-slate-500'
@@ -247,7 +249,7 @@ export default function Navbar() {
             </nav>
 
             {/* 3. Right: Authority Tools / Surface Switcher / Language Controls */}
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2.5 flex-shrink-0">
               
               {/* Authority-specific Refresh Intelligence Button */}
               {isAuthority && (
@@ -255,9 +257,10 @@ export default function Navbar() {
                   onClick={handleManualRefresh}
                   disabled={isRefreshing}
                   title="Refresh live incident queue"
-                  className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+                  className="px-2.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 text-xs font-semibold"
                 >
-                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-teal-400' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-teal-400' : 'text-teal-400'}`} />
+                  <span className="hidden md:inline">Refresh</span>
                 </button>
               )}
 
@@ -266,10 +269,10 @@ export default function Navbar() {
                 <div className="relative" ref={notifRef}>
                   <button
                     onClick={() => setNotifMenuOpen(!notifMenuOpen)}
-                    className="relative p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+                    className="relative p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
                     title="Priority Alerts"
                   >
-                    <Bell className="w-4 h-4" />
+                    <Bell className="w-3.5 h-3.5" />
                     {pendingAlertsCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center font-mono animate-pulse">
                         {pendingAlertsCount}
@@ -318,7 +321,7 @@ export default function Navbar() {
                   onClick={() => setSurfaceMenuOpen(!surfaceMenuOpen)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 transition-all shadow-xs ${
                     isAuthority
-                      ? 'bg-teal-900/50 hover:bg-teal-800/60 border-teal-500/50 text-white'
+                      ? 'bg-teal-950 hover:bg-teal-900 border-teal-500/50 text-teal-300'
                       : 'bg-surface hover:bg-slate-200/60 border-slate-200 text-ink'
                   }`}
                   aria-label="Switch Active Surface"
@@ -436,7 +439,7 @@ export default function Navbar() {
             </div>
 
             {/* 4. Mobile Menu Hamburger Button */}
-            <div className="flex lg:hidden items-center gap-2">
+            <div className="flex xl:hidden items-center gap-2">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`p-2 rounded-lg border transition-colors ${
@@ -455,7 +458,7 @@ export default function Navbar() {
 
         {/* Mobile Navigation Drawer: Mode-Specific */}
         {mobileMenuOpen && (
-          <div className={`lg:hidden border-t px-4 py-6 space-y-6 shadow-xl animate-in slide-in-from-top-3 duration-200 ${
+          <div className={`xl:hidden border-t px-4 py-6 space-y-6 shadow-xl animate-in slide-in-from-top-3 duration-200 ${
             isAuthority ? 'bg-slate-950 border-slate-800 text-white' : 'bg-white/95 backdrop-blur-xl border-slate-200 text-ink'
           }`}>
             

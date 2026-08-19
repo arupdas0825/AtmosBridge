@@ -1,0 +1,10 @@
+[
+  {
+    "id": "log_init_01",
+    "alert_id": "alt_punjab_8813",
+    "action": "acknowledge",
+    "actor": "Officer H. Singh (Punjab Pollution Control Board)",
+    "timestamp": "2026-08-19T15:11:26.002861+00:00",
+    "notes": "Acknowledged. Dispatched field team with agricultural balers."
+  }
+]
