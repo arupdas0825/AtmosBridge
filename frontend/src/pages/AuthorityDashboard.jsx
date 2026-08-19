@@ -165,7 +165,7 @@ export default function AuthorityDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 font-sans">
       
-      {/* 1. Header & Live Operational Ribbon */}
+      {/* 1. Header & Live Operational Status */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -181,7 +181,7 @@ export default function AuthorityDashboard() {
             </span>
           </div>
           <p className="text-xs text-ink-muted">
-            Human-approved incident verification, multimodal triage and multi-agency response dispatch.
+            Human-approved incident verification, multimodal triage, and multi-agency response dispatch.
           </p>
         </div>
 
@@ -197,7 +197,7 @@ export default function AuthorityDashboard() {
         </div>
       </div>
 
-      {/* 2. Streamlined Operational KPI Cards */}
+      {/* 2. Operational KPI Summary Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="card-surface p-3 text-center space-y-0.5 border-l-3 border-l-rose-500">
           <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Awaiting Review</span>
@@ -225,11 +225,11 @@ export default function AuthorityDashboard() {
         </div>
       </div>
 
-      {/* 3. THREE-PILLAR DECISION WORKSPACE (5-Second Viewport) */}
+      {/* 3. THREE-COLUMN OPERATIONAL WORKSPACE */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
         {/* ============================================================ */}
-        {/* COLUMN 1: PRIORITY INCIDENT QUEUE (Left - 3.5 / 12 Cols) */}
+        {/* COLUMN 1: PRIORITY INCIDENT QUEUE (Left - 4 / 12 Cols) */}
         {/* ============================================================ */}
         <div className="lg:col-span-4 card-surface p-3.5 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -266,7 +266,7 @@ export default function AuthorityDashboard() {
           </div>
 
           {/* Incident Queue List */}
-          <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[540px] overflow-y-auto pr-1">
             {filteredAlerts.length === 0 ? (
               <div className="p-4 text-center text-xs text-ink-muted bg-surface rounded-card border border-dashed border-slate-200">
                 No incidents match filter.
@@ -443,7 +443,7 @@ export default function AuthorityDashboard() {
         </div>
 
         {/* ============================================================ */}
-        {/* COLUMN 3: RESPONSE DECISION & HUMAN ACTION PANEL (Right - 3 Cols) */}
+        {/* COLUMN 3: RESPONSE DECISION & ACTION PANEL (Right - 3 / 12 Cols) */}
         {/* ============================================================ */}
         <div className="lg:col-span-3 space-y-4">
           {selectedIncident && (
