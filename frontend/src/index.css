@@ -298,3 +298,19 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Custom Leaflet Popup Styling */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+.leaflet-container {
+  font-family: inherit !important;
+}
+
