@@ -8,6 +8,7 @@ import {
   Bell,
   Building2,
   Globe2,
+  Home,
   Sparkles,
   Activity,
   Shield
@@ -23,7 +24,7 @@ export default function BottomNav() {
     { 
       id: 'landing', 
       label: 'Home', 
-      icon: Sparkles, 
+      icon: Home, 
       activeCheck: (s) => s === 'landing' 
     },
     { 

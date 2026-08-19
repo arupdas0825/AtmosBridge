@@ -18,6 +18,7 @@ import {
   Shield,
   User,
   Activity,
+  Home,
   Sparkles,
   Check,
   Building2,
@@ -66,7 +67,7 @@ export default function Navbar() {
 
   // --- Citizen Surface Navigation ---
   const citizenPrimaryNav = [
-    { id: 'landing', label: 'Home', icon: Sparkles },
+    { id: 'landing', label: 'Home', icon: Home },
     { id: 'report', label: 'Report Incident', icon: PlusCircle },
     { id: 'local-intelligence', label: 'Local Air', icon: Activity },
     { id: 'hotspots', label: 'Hotspots', icon: Flame },
