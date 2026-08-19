@@ -26,20 +26,20 @@ export default function Landing() {
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-surface/60 via-surface to-surface pt-10 pb-14 px-4 sm:px-6 lg:px-8 border-b border-slate-200/80">
         <div className="max-w-4xl mx-auto text-center space-y-5">
           
-          {/* Eyebrow Hackathon Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 text-brand text-xs font-semibold tracking-wide">
+          {/* Eyebrow Product Tag */}
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand/10 text-brand text-xs font-semibold tracking-wide">
             <Sparkles className="w-3.5 h-3.5 text-brand" />
-            <span>Hack2Skill × Google Cloud — Track 2: Clean Air & BRICS Sustainability</span>
+            <span>From local sightings to cross-border risk intelligence</span>
           </div>
 
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-5xl font-extrabold text-ink tracking-tight leading-tight sm:leading-tight">
-            {t.heroTitle || 'Detect What Macro AQI Monitors Miss'}
+            {t.heroTitle || 'Detect Pollution Before It Becomes a Crisis.'}
           </h1>
 
           {/* Subtitle */}
           <p className="text-base sm:text-lg text-ink-muted max-w-2xl mx-auto leading-relaxed">
-            {t.heroSubtitle || 'Federated climate intelligence fusing citizen sightings, micro-sensors, satellite proxies, and weather dispersion to pinpoint acute pollution hotspots across BRICS sovereign airsheds.'}
+            {t.heroSubtitle || 'AtmosBridge combines citizen observations, environmental signals, geospatial intelligence, and Google AI to identify hyperlocal pollution events, forecast emerging risks, and help authorities respond faster.'}
           </p>
 
           {/* Primary Action Buttons */}

@@ -102,9 +102,6 @@ export default function Navbar() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-extrabold text-lg text-ink tracking-tight">AtmosBridge</span>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-brand/10 text-brand">
-                BRICS AI
-              </span>
             </div>
           </div>
 

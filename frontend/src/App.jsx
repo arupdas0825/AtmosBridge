@@ -97,9 +97,6 @@ export default function App() {
                 />
               </div>
               <span className="font-bold text-ink font-sans text-sm">AtmosBridge</span>
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-brand/10 text-brand">
-                v1.0.0
-              </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 text-xs">

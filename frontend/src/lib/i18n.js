@@ -15,8 +15,8 @@ export const translations = {
     navAbout: 'About & AI',
 
     // Landing
-    heroTitle: 'Detect What Macro AQI Monitors Miss',
-    heroSubtitle: 'A federated climate-intelligence bridge fusing citizen sightings, micro-sensors, satellite proxies, and Gemini AI to stop hyperlocal and cross-border pollution before it spreads.',
+    heroTitle: 'Detect Pollution Before It Becomes a Crisis.',
+    heroSubtitle: 'AtmosBridge combines citizen observations, environmental signals, geospatial intelligence, and Google AI to identify hyperlocal pollution events, forecast emerging risks, and help authorities respond faster.',
     ctaReport: 'Report Pollution Sighting',
     ctaAuthority: 'Open Authority Dashboard',
     ctaExploreMap: 'Explore BRICS Live Map',

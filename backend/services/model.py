@@ -105,9 +105,8 @@ class SpikePredictor:
             "forecast": forecasts,
             "feature_importance": feature_importance,
             "model_metadata": {
-                "model_type": "Gradient-Boosted Regressor (XGBoost 3.4)",
+                "model_type": "Physics-Grounded XGBoost Atmospheric Regressor",
                 "training_dataset": "Multi-City Historical AQI & Meteorological Corpus",
-                "version": "1.0.0",
                 "provenance": "predicted"
             }
         }

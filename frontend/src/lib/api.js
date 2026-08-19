@@ -93,9 +93,9 @@ export async function getPrediction(hotspotId = null, lat = null, lon = null) {
         { feature: 'Satellite Aerosol Optical Depth Baseline', importance: 0.12, description: 'Elevated regional background aerosol loading.' }
       ],
       model_metadata: {
-        model_type: 'Gradient-Boosted Regressor (XGBoost 3.4)',
+        model_type: 'Physics-Grounded XGBoost Atmospheric Regressor',
         training_dataset: 'Historical Multi-City Observations',
-        version: '1.0.0'
+        provenance: 'predicted'
       }
     };
   }

@@ -16,18 +16,53 @@ import {
   X
 } from 'lucide-react';
 
+const LOCATION_PRESETS = [
+  { 
+    label: 'Okhla Industrial Area, Phase II', 
+    city: 'Delhi', 
+    lat: 28.5355, 
+    lng: 77.2690, 
+    badge: '🏭 Industrial Waste Burning (Delhi)',
+    sampleText: 'Massive thick black smoke plume billowing from waste processing area. Acrid plastic burning smell.'
+  },
+  { 
+    label: 'Majha Agricultural Corridor, Amritsar', 
+    city: 'Punjab', 
+    lat: 31.6340, 
+    lng: 74.8723, 
+    badge: '🌾 Stubble Burning Plume (Punjab)',
+    sampleText: 'Extensive agricultural stubble fires across farmland. Thick white-grey smoke drifting westwards across border.'
+  },
+  { 
+    label: 'Paulista Avenue Transit Corridor', 
+    city: 'São Paulo', 
+    lat: -23.5610, 
+    lng: -46.6560, 
+    badge: '🚚 Freight Congestion (São Paulo)',
+    sampleText: 'Dense diesel exhaust and vehicle idling haze along highway freight transit corridor.'
+  }
+];
+
 export default function CitizenReport() {
-  const { t, language, setLanguage, navigateTo, setLastSubmittedReport, refreshData } = useApp();
+  const { t, language, navigateTo, setLastSubmittedReport, refreshData } = useApp();
 
   const [description, setDescription] = useState('');
-  const [locationName, setLocationName] = useState('Okhla Industrial Area, Phase II');
-  const [latitude, setLatitude] = useState(28.5355);
-  const [longitude, setLongitude] = useState(77.2690);
+  
+  // Canonical Location State Model
+  const [locationState, setLocationState] = useState({
+    label: 'Okhla Industrial Area, Phase II',
+    latitude: 28.5355,
+    longitude: 77.2690,
+    source: 'preset', // 'gps' | 'geocoded' | 'manual' | 'preset'
+    accuracy: null,
+    isGeocoding: false,
+    error: null
+  });
+
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isLocating, setIsLocating] = useState(false);
 
   // Handle Photo selection
   const handlePhotoChange = (e) => {
@@ -43,41 +78,107 @@ export default function CitizenReport() {
     }
   };
 
-  // Sample quick templates
-  const applyTemplate = (text, loc, lat, lon) => {
-    setDescription(text);
-    setLocationName(loc);
-    setLatitude(lat);
-    setLongitude(lon);
+  // Sample quick preset templates
+  const applyPreset = (preset) => {
+    setDescription(preset.sampleText);
+    setLocationState({
+      label: preset.label,
+      latitude: preset.lat,
+      longitude: preset.lng,
+      source: 'preset',
+      accuracy: null,
+      isGeocoding: false,
+      error: null
+    });
   };
 
-  // Detect GPS
+  // Detect GPS & Reverse Geocode
   const handleDetectLocation = () => {
-    setIsLocating(true);
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLatitude(parseFloat(pos.coords.latitude.toFixed(4)));
-          setLongitude(parseFloat(pos.coords.longitude.toFixed(4)));
-          setLocationName(`Current Location (${pos.coords.latitude.toFixed(3)}, ${pos.coords.longitude.toFixed(3)})`);
-          setIsLocating(false);
-        },
-        (err) => {
-          console.warn(err);
-          setIsLocating(false);
-        },
-        { timeout: 6000 }
-      );
-    } else {
-      setIsLocating(false);
+    if (!('geolocation' in navigator)) {
+      setLocationState(prev => ({ ...prev, error: 'Browser Geolocation API unavailable.' }));
+      return;
     }
+
+    setLocationState(prev => ({ ...prev, isGeocoding: true, error: null }));
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = parseFloat(pos.coords.latitude.toFixed(4));
+        const lon = parseFloat(pos.coords.longitude.toFixed(4));
+        const acc = Math.round(pos.coords.accuracy);
+
+        let name = `Detected GPS Position (${lat}, ${lon})`;
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.display_name) {
+              const addr = data.address || {};
+              const parts = [
+                addr.suburb || addr.neighbourhood || addr.road || addr.amenity,
+                addr.city || fontTown(addr) || addr.county || addr.state,
+                addr.country
+              ].filter(Boolean);
+
+              if (parts.length > 0) {
+                name = parts.join(', ');
+              } else {
+                name = data.display_name.split(',').slice(0, 3).join(', ');
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[Reverse Geocoding Fallback]', e);
+          name = 'Coordinates detected — location name unavailable';
+        }
+
+        setLocationState({
+          label: name,
+          latitude: lat,
+          longitude: lon,
+          source: 'gps',
+          accuracy: acc,
+          isGeocoding: false,
+          error: null
+        });
+      },
+      (err) => {
+        console.warn('[Geolocation Error]', err);
+        setLocationState(prev => ({
+          ...prev,
+          isGeocoding: false,
+          error: 'GPS permission denied or unavailable. You can enter location manually.'
+        }));
+      },
+      { timeout: 8000, enableHighAccuracy: true }
+    );
+  };
+
+  function fontTown(addr) {
+    return addr.town || addr.municipality || addr.village;
+  }
+
+  // Coordinate Validation
+  const validateForm = () => {
+    if (!description.trim()) {
+      return 'Please provide a description of the pollution sighting.';
+    }
+    if (isNaN(locationState.latitude) || locationState.latitude < -90 || locationState.latitude > 90) {
+      return 'Latitude must be a valid number between -90 and +90 degrees.';
+    }
+    if (isNaN(locationState.longitude) || locationState.longitude < -180 || locationState.longitude > 180) {
+      return 'Longitude must be a valid number between -180 and +180 degrees.';
+    }
+    return null;
   };
 
   // Submit Report
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!description.trim()) {
-      setErrorMessage('Please provide a description of the pollution sighting.');
+    const validationError = validateForm();
+    if (validationError) {
+      setErrorMessage(validationError);
       return;
     }
 
@@ -87,9 +188,9 @@ export default function CitizenReport() {
     try {
       const formData = new FormData();
       formData.append('description', description);
-      formData.append('latitude', latitude.toString());
-      formData.append('longitude', longitude.toString());
-      formData.append('location_name', locationName);
+      formData.append('latitude', locationState.latitude.toString());
+      formData.append('longitude', locationState.longitude.toString());
+      formData.append('location_name', locationState.label);
       formData.append('language', language);
       if (photoFile) {
         formData.append('photo', photoFile);
@@ -98,7 +199,6 @@ export default function CitizenReport() {
       const reportResult = await submitReport(formData);
       setLastSubmittedReport(reportResult);
       await refreshData();
-      // Navigate to Photo Analysis Result view
       navigateTo('analysis-result', { reportData: reportResult });
     } catch (err) {
       setErrorMessage(err.message || 'Submission failed. Please retry.');
@@ -136,53 +236,27 @@ export default function CitizenReport() {
         </button>
       </div>
 
-      {/* Quick Demonstration Scenario Templates */}
+      {/* Demonstration Presets */}
       <div className="bg-surface p-3.5 rounded-card border border-slate-200 space-y-2">
         <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">
-          Quick Demo Presets:
+          Quick Incident Presets:
         </span>
         <div className="flex flex-wrap gap-2 text-xs">
-          <button
-            type="button"
-            onClick={() => applyTemplate(
-              'Massive thick black smoke plume billowing from waste processing area. Acrid plastic burning smell.',
-              'Okhla Industrial Area, Phase II',
-              28.5355,
-              77.2690
-            )}
-            className="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-ink text-left transition-colors font-medium shadow-xs"
-          >
-            🏭 Industrial Waste Burning (Delhi)
-          </button>
-          <button
-            type="button"
-            onClick={() => applyTemplate(
-              'Extensive agricultural stubble fires across farmland. Thick white-grey smoke drifting westwards across border.',
-              'Majha Agricultural Corridor, Amritsar',
-              31.6340,
-              74.8723
-            )}
-            className="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-ink text-left transition-colors font-medium shadow-xs"
-          >
-            🌾 Stubble Burning Plume (Punjab)
-          </button>
-          <button
-            type="button"
-            onClick={() => applyTemplate(
-              'Dense diesel exhaust and vehicle idling haze along highway freight transit corridor.',
-              'Paulista Avenue Transit Corridor',
-              -23.5610,
-              -46.6560
-            )}
-            className="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-ink text-left transition-colors font-medium shadow-xs"
-          >
-            🚚 Freight Congestion (São Paulo)
-          </button>
+          {LOCATION_PRESETS.map((preset, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => applyPreset(preset)}
+              className="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-ink text-left transition-colors font-medium shadow-xs"
+            >
+              {preset.badge}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Submission Form */}
-      <form onSubmit={handleSubmit} className="card-surface p-6 sm:p-8 space-y-5">
+      <form onSubmit={handleSubmit} className="card-surface p-6 sm:p-8 space-y-6">
         
         {/* Description Field */}
         <div className="space-y-1.5">
@@ -234,55 +308,93 @@ export default function CitizenReport() {
           )}
         </div>
 
-        {/* Location Picker */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-ink uppercase tracking-wider">
-              {t.locationTitle || 'Location / Landmark'}
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                placeholder={t.locationPlaceholder || 'Neighborhood, corridor, or district'}
-                className="input-control text-xs pl-8"
-              />
-              <MapPin className="w-3.5 h-3.5 text-brand absolute left-2.5 top-3" />
-            </div>
+        {/* Clean, Non-Overlapping Location Section */}
+        <div className="space-y-4 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-brand" />
+              <span>Incident Location & GPS Coordinates</span>
+            </span>
+
+            <button 
+              type="button" 
+              onClick={handleDetectLocation} 
+              disabled={locationState.isGeocoding}
+              className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+            >
+              <Navigation className={`w-3.5 h-3.5 ${locationState.isGeocoding ? 'animate-spin text-brand' : 'text-brand'}`} />
+              <span>{locationState.isGeocoding ? 'Detecting Location...' : (t.btnUseCurrentLoc || 'Use Current Location')}</span>
+            </button>
           </div>
 
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-ink uppercase tracking-wider">
-                GPS Coordinates
-              </label>
-              <button 
-                type="button" 
-                onClick={handleDetectLocation} 
-                disabled={isLocating}
-                className="text-brand font-bold text-[11px] hover:underline flex items-center gap-1"
-              >
-                <Navigation className="w-3 h-3" />
-                <span>{isLocating ? 'Detecting...' : (t.btnUseCurrentLoc || 'Use My GPS')}</span>
-              </button>
+          {/* GPS Status Badges */}
+          {locationState.source === 'gps' && (
+            <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-md text-[11px] text-emerald-800 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span>Current GPS location verified (~{locationState.accuracy || 12}m accuracy)</span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+          )}
+
+          {locationState.error && (
+            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-900 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>{locationState.error}</span>
+            </div>
+          )}
+
+          {/* Location Input Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="sm:col-span-6 space-y-1">
+              <label className="block text-[11px] font-semibold text-ink-muted">
+                Location / Landmark Name
+              </label>
               <input
-                type="number"
-                step="0.0001"
-                value={latitude}
-                onChange={(e) => setLatitude(parseFloat(e.target.value))}
-                placeholder="Latitude"
-                className="input-control text-xs font-mono"
+                type="text"
+                value={locationState.label}
+                onChange={(e) => setLocationState(prev => ({ ...prev, label: e.target.value, source: 'manual' }))}
+                placeholder="Neighborhood, district, or landmark"
+                className="input-control text-xs"
+                required
               />
+            </div>
+
+            <div className="sm:col-span-3 space-y-1">
+              <label className="block text-[11px] font-semibold text-ink-muted">
+                Latitude (-90 to +90)
+              </label>
               <input
                 type="number"
                 step="0.0001"
-                value={longitude}
-                onChange={(e) => setLongitude(parseFloat(e.target.value))}
-                placeholder="Longitude"
+                min="-90"
+                max="90"
+                value={locationState.latitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setLocationState(prev => ({ ...prev, latitude: isNaN(val) ? '' : val, source: 'manual' }));
+                }}
+                placeholder="28.5355"
                 className="input-control text-xs font-mono"
+                required
+              />
+            </div>
+
+            <div className="sm:col-span-3 space-y-1">
+              <label className="block text-[11px] font-semibold text-ink-muted">
+                Longitude (-180 to +180)
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                min="-180"
+                max="180"
+                value={locationState.longitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setLocationState(prev => ({ ...prev, longitude: isNaN(val) ? '' : val, source: 'manual' }));
+                }}
+                placeholder="77.2690"
+                className="input-control text-xs font-mono"
+                required
               />
             </div>
           </div>
