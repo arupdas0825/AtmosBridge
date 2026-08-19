@@ -56,11 +56,11 @@ export default function Landing() {
             </button>
 
             <button
-              onClick={() => navigateTo('authority')}
+              onClick={() => { setActiveRole('authority'); navigateTo('authority'); }}
               className="btn-secondary text-sm px-5 py-2.5 relative"
             >
               <Shield className="w-4 h-4 text-amber-600" />
-              <span>Open Authority Dashboard</span>
+              <span>Open Authority Command Center</span>
               {pendingAlertsCount > 0 && (
                 <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-risk-critical text-white font-bold">
                   {pendingAlertsCount}
