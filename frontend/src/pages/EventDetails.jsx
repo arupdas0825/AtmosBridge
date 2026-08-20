@@ -27,13 +27,18 @@ export default function EventDetails() {
 
   useEffect(() => {
     async function load() {
-      if (!activeHotspotId) return;
+      if (!activeHotspotId) {
+        setLoading(false);
+        setHotspot(null);
+        return;
+      }
       setLoading(true);
       try {
         const data = await getHotspotById(activeHotspotId);
         setHotspot(data);
       } catch (err) {
         console.error(err);
+        setHotspot(null);
       } finally {
         setLoading(false);
       }

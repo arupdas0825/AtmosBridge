@@ -63,7 +63,7 @@ List recent reports with optional filtering by `country`, `severity`, or boundin
 ### 2. Multimodal Analysis
 
 #### `POST /api/analyze`
-Direct analysis endpoint for citizen input through Gemini multimodal function-calling tools.
+Direct analysis endpoint for citizen input through Gemini structured multimodal vision.
 
 - **Request Body (JSON or Form):**
   - `text`: Description
@@ -175,7 +175,7 @@ Get 6h, 12h, and 24h spike predictions and feature-importance explanations for a
       {"feature": "Baseline Sensor Trajectory", "importance": 0.12, "description": "PM2.5 trending +18 µg/m³ per hour"}
     ],
     "model_metadata": {
-      "model_type": "Gradient-Boosted Regressor (XGBoost)",
+      "model_type": "Physics-Grounded Atmospheric Risk Predictor",
       "training_dataset": "Historical AQI & Meteorological Observations",
       "version": "1.0.0"
     }

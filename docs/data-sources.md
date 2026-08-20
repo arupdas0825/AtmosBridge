@@ -6,7 +6,7 @@ Every data element consumed, processed, or surfaced by AtmosBridge is governed b
 
 1. **`Observed`**: Directly ingested from a real-world, verified live monitoring station or telemetry feed (e.g., OpenAQ real-time sensor network, Open-Meteo live weather observation).
 2. **`Inferred`**: Derived by algorithmic fusion or AI multimodal analysis from user submissions and contextual environmental parameters (e.g., Gemini visual plume severity assessment).
-3. **`Predicted`**: Forecasted into future time horizons by machine learning models or dispersion physics (e.g., XGBoost 6h/12h/24h spike probability, atmospheric wind drift cone).
+3. **`Predicted`**: Forecasted into future time horizons by physics-grounded regression models or dispersion physics (e.g., Physics-Grounded 6h/12h/24h spike probability, atmospheric wind drift cone).
 4. **`Simulated`**: Generated deterministically for demonstration, benchmarking, dense sensor clustering, or cross-border regional scenarios (e.g., satellite aerosol optical depth proxy, seeded industrial corridors).
 
 ---
@@ -20,7 +20,7 @@ Every data element consumed, processed, or surfaced by AtmosBridge is governed b
 | **Multimodal Citizen Reports** | Citizen submissions (Photos, Audio, Text) | `Observed` (Input) / `Inferred` (AI Structuring) | Multipart Form / WebRTC Speech Audio / JPEG | Real-time event driven | Hyperlocal sighting discovery |
 | **Dense Sensor Mesh** | Seeded micro-sensor grid across BRICS hubs | `Simulated` | In-memory / GeoJSON | 15-minute simulated cycle | Hyperlocal resolution enhancement |
 | **Satellite Aerosol Proxy** | Sentinel-5P / MODIS AOD proxy distribution | `Simulated` | Raster grid / GeoJSON | Daily proxy cycle | Regional plume tracking & background haze |
-| **Historical Training Corpus** | OpenAQ & CPCB Historical Backfill | `Observed` (Historical) | CSV / SQLite | Static model training | Training XGBoost spike regressor |
+| **Historical Training Corpus** | OpenAQ & CPCB Historical Backfill | `Observed` (Historical) | CSV / SQLite | Static model benchmarking | Calibrating atmospheric spike predictor |
 | **Trans-Boundary Scenarios** | Regional agricultural and industrial drift models | `Simulated` (Scenario) / `Predicted` (Plume) | GeoJSON vector polygons | Scenario trigger | Cross-border BRICS coordination demonstration |
 
 ---

@@ -30,7 +30,7 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 3. **Satellite proxy indicators** — Aerosol Optical Depth (AOD) proxies
 4. **Meteorological dispersion feeds** — Open-Meteo live wind and humidity data
 
-**Google Gemini** performs multimodal reasoning with grounded function-calling (`get_local_air_quality`, `get_weather`) so it structures reports into actionable incident data rather than inventing readings. A **physics-grounded spike regression engine** (supported by an offline XGBoost training pipeline) forecasts 6h/12h/24h spike risk. Together they surface hyperlocal hotspots, model cross-border atmospheric drift, and route actionable alerts to municipal authorities — with human-in-the-loop governance and zero automated punitive action.
+**Google Gemini** performs multimodal reasoning to structure citizen sightings into actionable incident data rather than inventing readings. A **physics-grounded atmospheric risk predictor** forecasts 6h/12h/24h spike risk. Together they surface hyperlocal hotspots, model cross-border atmospheric drift, and route actionable alerts to municipal authorities — with human-in-the-loop governance and zero automated punitive action.
 
 > **2–3 line pitch:** AtmosBridge is a federated, AI-powered climate intelligence platform that fuses citizen-reported pollution sightings, ground sensors, satellite indicators, and weather data to detect hyperlocal pollution hotspots city-level AQI monitors miss. Gemini structures multimodal citizen reports into explainable risk assessments; a prediction layer forecasts spikes and models cross-border smog movement between BRICS regions, routing high-confidence alerts to authorities for rapid, human-approved intervention.
 
@@ -54,7 +54,7 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 | 12 | Cross-Border Intelligence | Regional | Trans-boundary drift model, source/target region cards, bilateral advisory |
 | 13 | Analytics & Trends | Public Health | Historical trend comparison across BRICS hubs, pollutant breakdown, CSV export |
 | 14 | Data Sources & Provenance | Transparency | Provenance registry — Observed / Inferred / Predicted / Simulated |
-| 15 | Settings & Localization | Accessibility | Language switch (English, हिन्दी, বাংলা), preferences, demo reset |
+| 15 | Settings & Localization | Accessibility | Language switch (English, हिन्दी, Português, Русский, 中文), preferences |
 | 16 | About & Responsible AI | Compliance | Responsible-AI principles, non-diagnostic disclaimer, audit architecture |
 
 ## Required Screenshots Catalog
@@ -70,7 +70,7 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 | `prediction.png` | Prediction Timeline (Screen 9) | 6h/12h/24h AQI spike forecast chart with confidence bounds and feature importance breakdown. |
 | `cross-border.png` | Cross-Border Intelligence (Screen 12) | Trans-boundary atmospheric pollution drift model showing source and target country cards (e.g., Punjab/Pakistan corridor or regional industrial drift). |
 | `authority-dashboard.png` | Authority Dashboard (Screen 10 & 11) | Real-time incident triage queue, affected population estimates, and Acknowledge / Escalate governance workflow buttons. |
-| `mobile.png` | Mobile Viewport | Responsive mobile UI showcasing the floating liquid-glass bottom navigation dock. |
+| `mobile.png` | Mobile Viewport | Responsive mobile UI showcasing the navigation bar and card layouts. |
 
 
 ---
@@ -80,10 +80,10 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 | Layer | Choice |
 |---|---|
 | Frontend | React 18 + Vite — **pure JavaScript/JSX, no TypeScript** — Tailwind CSS, Recharts |
-| Maps | Google Maps JavaScript API, with an SVG/vector fallback if no key is configured |
+| Maps | Leaflet + OpenStreetMap & CARTO Dark Matter Cartographic Tiles |
 | Backend | Python 3.10+, FastAPI, Pydantic v2, Uvicorn |
-| AI / Multimodal | Google Gemini API (gemini-2.5-flash / gemini-2.0-flash / gemini-1.5-flash), with deterministic demo fallback |
-| Prediction | Physics-Grounded Atmospheric Dispersion & Regression Engine (offline XGBoost regressor script) |
+| AI / Multimodal | Google Gemini API (gemini-2.5-flash / gemini-2.0-flash / gemini-1.5-flash), with deterministic fallback |
+| Prediction | Physics-Grounded Atmospheric Risk Predictor (Atmospheric ventilation, boundary layer inversion, stagnation modeling) |
 | Live Data | OpenAQ (air quality), Open-Meteo (weather) |
 | Simulated Data | Seeded dense sensor mesh + satellite aerosol proxy dataset, clearly labeled in-app |
 | Deployment | Vercel (frontend SPA & serverless API) / Google Cloud Run (containerized backend ready) |
@@ -131,18 +131,16 @@ cp .env.example .env
 | Variable | Required | Side | Description |
 |---|---|---|---|
 | `GEMINI_API_KEY` | Yes, for live AI features | Server-only | Google AI Studio key — never sent to the browser |
-| `VITE_GOOGLE_MAPS_API_KEY` | No — SVG fallback activates | Client (HTTP-referrer restricted) | Google Maps JS API key |
-| `OPENAQ_API_KEY` | No | Server-only | OpenAQ v2 API key |
-| `FIREBASE_PROJECT_ID` | No | Server-only | Firebase project for cloud deployment |
-| `FIREBASE_STORAGE_BUCKET` | No | Server-only | Firebase storage bucket |
+| `OPENAQ_API_KEY` | No | Server-only | OpenAQ v2 API key (optional) |
+| `ALLOWED_ORIGINS` | No | Server-only | Allowed CORS origins for production |
 | `PORT` / `HOST` / `ENVIRONMENT` | No | Server-only | Local dev server config |
 
 ```ini
 GEMINI_API_KEY=your_gemini_api_key_here
-VITE_GOOGLE_MAPS_API_KEY=your_maps_key_here
 PORT=8000
 HOST=0.0.0.0
 ENVIRONMENT=development
+ALLOWED_ORIGINS=https://atmosbridgeai.vercel.app,http://localhost:5173
 ```
 
 ---

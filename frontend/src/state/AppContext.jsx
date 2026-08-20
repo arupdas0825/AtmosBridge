@@ -14,12 +14,12 @@ export function AppProvider({ children }) {
   });
 
   const [currentScreen, setCurrentScreen] = useState('landing'); // Screen ID
-  const [activeHotspotId, setActiveHotspotId] = useState('hotspot_ind_delhi_01');
+  const [activeHotspotId, setActiveHotspotId] = useState(null);
   const [activeReportId, setActiveReportId] = useState(null);
-  const [activeAlertId, setActiveAlertId] = useState('alt_delhi_8812');
-  const [activeScenarioId, setActiveScenarioId] = useState('xb_punjab_lahore_01');
+  const [activeAlertId, setActiveAlertId] = useState(null);
+  const [activeScenarioId, setActiveScenarioId] = useState(null);
   const [lastSubmittedReport, setLastSubmittedReport] = useState(null);
-  const [pendingAlertsCount, setPendingAlertsCount] = useState(1);
+  const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
   const [alertsList, setAlertsList] = useState([]);
   const [hotspotsList, setHotspotsList] = useState([]);
   const [surfaceToast, setSurfaceToast] = useState(null);
@@ -45,7 +45,7 @@ export function AppProvider({ children }) {
     return () => clearInterval(interval);
   }, [activeCountry]);
 
-  // Switch Active Surface with Mode Navigation
+  // Switch Active Surface with Deterministic Mode Navigation (P0.5)
   const setActiveRole = (newRole) => {
     if (newRole !== 'citizen' && newRole !== 'authority') return;
     
@@ -54,14 +54,10 @@ export function AppProvider({ children }) {
 
     if (newRole === 'authority') {
       setSurfaceToast('Transitioning to Authority Command Center...');
-      if (['landing', 'report', 'voice', 'analysis-result', 'local-intelligence'].includes(currentScreen)) {
-        setCurrentScreen('authority');
-      }
+      setCurrentScreen('authority');
     } else {
       setSurfaceToast('Transitioning to Citizen Public Portal...');
-      if (['authority', 'alert-details'].includes(currentScreen)) {
-        setCurrentScreen('landing');
-      }
+      setCurrentScreen('landing');
     }
 
     setTimeout(() => {

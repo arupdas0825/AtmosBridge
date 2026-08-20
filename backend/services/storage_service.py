@@ -102,6 +102,9 @@ class StorageService:
         self._save_json(self.reports_file, reports)
         return report
 
+    def set_all_reports(self, reports: List[Dict[str, Any]]):
+        self._save_json(self.reports_file, reports)
+
     # --- Hotspots ---
     def get_hotspots(self, country: Optional[str] = None) -> List[Dict[str, Any]]:
         hotspots = self._load_json(self.hotspots_file)

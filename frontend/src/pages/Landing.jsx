@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function Landing() {
-  const { t, navigateTo, setActiveCountry, hotspotsList, pendingAlertsCount } = useApp();
+  const { t, navigateTo, setActiveRole, setActiveCountry, hotspotsList, pendingAlertsCount } = useApp();
 
   return (
     <div className="space-y-12 pb-16 font-sans">
@@ -28,20 +28,20 @@ export default function Landing() {
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-surface/60 via-surface to-surface pt-10 pb-14 px-4 sm:px-6 lg:px-8 border-b border-slate-200/80">
         <div className="max-w-4xl mx-auto text-center space-y-5">
           
-          {/* Eyebrow Product Statement */}
+          {/* Eyebrow Product Statement / Micro-line (P1.6) */}
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand/10 text-brand text-xs font-semibold tracking-wide">
             <Sparkles className="w-3.5 h-3.5 text-brand" />
-            <span>From local evidence to environmental intelligence</span>
+            <span>From local evidence to cross-border risk intelligence.</span>
           </div>
 
-          {/* Main Distinctive Headline */}
+          {/* Main Distinctive Headline (P1.6) */}
           <h1 className="text-3xl sm:text-5xl font-extrabold text-ink tracking-tight leading-tight sm:leading-tight">
-            See Pollution Move. Act Before It Spreads.
+            See Pollution Where Conventional Monitoring Misses It.
           </h1>
 
-          {/* Supporting Copy */}
+          {/* Supporting Copy (P1.6) */}
           <p className="text-base sm:text-lg text-ink-muted max-w-2xl mx-auto leading-relaxed">
-            AtmosBridge connects citizen observations, environmental signals, geospatial intelligence, and AI-assisted analysis to surface hyperlocal pollution events and emerging atmospheric risks.
+            AtmosBridge combines citizen observations, environmental data, geospatial intelligence, and Google AI to surface hyperlocal pollution events, assess emerging risks, and support faster, human-led response.
           </p>
 
           {/* Primary Action Buttons */}
@@ -60,7 +60,7 @@ export default function Landing() {
               className="btn-secondary text-sm px-5 py-2.5 relative"
             >
               <Shield className="w-4 h-4 text-amber-600" />
-              <span>Open Authority Command Center</span>
+              <span>Open Authority Dashboard</span>
               {pendingAlertsCount > 0 && (
                 <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-risk-critical text-white font-bold">
                   {pendingAlertsCount}
@@ -99,9 +99,9 @@ export default function Landing() {
           </div>
 
           <div className="card-surface p-4 sm:p-5 text-center space-y-1">
-            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-risk-high">{hotspotsList.length || 6}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-risk-high">{hotspotsList.length}</div>
             <div className="text-xs font-semibold text-ink">Active Airshed Clusters</div>
-            <p className="text-[11px] text-ink-muted">Prototype telemetry mesh</p>
+            <p className="text-[11px] text-ink-muted">Telemetry mesh nodes</p>
           </div>
 
           <div className="card-surface p-4 sm:p-5 text-center space-y-1">

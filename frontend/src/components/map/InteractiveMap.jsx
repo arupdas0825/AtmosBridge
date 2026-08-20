@@ -433,7 +433,7 @@ export default function InteractiveMap({
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span className="text-[11px]">Predicted (XGBoost)</span>
+            <span className="text-[11px]">Predicted (Physics-Grounded)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-slate-500"></span>

@@ -73,7 +73,7 @@ export default function DataSources() {
             <ProvenanceTag type="predicted" size="sm" />
           </div>
           <p className="text-xs text-ink-muted leading-relaxed">
-            Forecasted into future horizons by XGBoost regression and wind dispersion models.
+            Forecasted into future horizons by physics-grounded regression and wind dispersion models.
           </p>
         </div>
 

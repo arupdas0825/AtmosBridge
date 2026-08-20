@@ -80,17 +80,17 @@ export default function Navbar() {
     { id: 'settings', label: 'Settings', icon: SettingsIcon, desc: 'Language and regional preferences' },
   ];
 
-  // --- Authority Surface Navigation ---
+  // --- Authority Surface Navigation (Streamlined 5 Primary + 4 More) ---
   const authorityPrimaryNav = [
     { id: 'authority', label: 'Command Center', icon: Building2 },
     { id: 'hotspots', label: 'Hotspots', icon: Flame },
     { id: 'predictions', label: 'Forecasting', icon: TrendingUp },
     { id: 'crossborder', label: 'Cross-Border', icon: Globe2 },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'map', label: 'Geospatial Map', icon: MapIcon },
   ];
 
   const authorityMoreNav = [
+    { id: 'analytics', label: 'Analytics & Trends', icon: BarChart3, desc: 'Airshed trends & historical comparison' },
     { id: 'datasources', label: 'Data Sources Registry', icon: Database, desc: 'Ground sensors & satellite feed contracts' },
     { id: 'about', label: 'Responsible AI & Audit', icon: Info, desc: 'Human-in-the-loop compliance rules' },
     { id: 'settings', label: 'Operations Config', icon: SettingsIcon, desc: 'Alert thresholds & telemetry polling' },

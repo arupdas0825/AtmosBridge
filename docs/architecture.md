@@ -2,55 +2,52 @@
 
 ## 1. Stack
 
-- **Frontend:** React + Vite + **JavaScript (JSX, no TypeScript)**, Tailwind CSS, Recharts, Google Maps JS API
-- **Backend:** Python + FastAPI
-- **AI:** Gemini API (multimodal + function calling + structured output), via Vertex AI or the direct Gemini API — whichever has faster hackathon setup (direct Gemini API recommended for speed)
-- **Database:** Firestore (reports, hotspots, alerts, users) + a small BigQuery-free CSV/SQLite store for historical AQI/weather used to train the predictor (keeps costs at zero for the demo)
-- **Storage:** Firebase Storage (citizen photo uploads)
-- **Auth:** Firebase Authentication (authority/analyst roles only; citizen reporting is anonymous by default)
-- **Maps:** Google Maps Platform (Maps JS API, restricted key)
-- **Speech:** Google Cloud Speech-to-Text / Translation / Text-to-Speech
-- **Deployment:** Frontend → Vercel; Backend → Google Cloud Run
+- **Frontend:** React 18 + Vite + **JavaScript (JSX, no TypeScript)**, Tailwind CSS, Recharts, Leaflet + CARTO Tiles
+- **Backend:** Python 3.10+ + FastAPI, Pydantic v2, Uvicorn
+- **AI:** Google Gemini API (gemini-2.5-flash / gemini-2.0-flash / gemini-1.5-flash), multimodal structured output with schema validation and deterministic fallback
+- **Database / Storage:** JSON/File-backed storage service with serverless `/tmp` ephemeral persistence on Vercel and local caching
+- **Maps:** Leaflet + OpenStreetMap & CARTO Dark Matter Cartographic Tiles
+- **Live Data:** OpenAQ (air quality), Open-Meteo (meteorological wind vectors)
+- **Deployment:** Vercel (frontend SPA & serverless API) / Google Cloud Run container-ready
 
-Rationale: this stack maximizes Google-ecosystem credibility for judging while keeping deploy time low (Cloud Run + Vercel are both single-command deploys). SQLite/CSV for historical model training avoids BigQuery setup overhead without weakening the story — `data-sources.md` in the repo documents the BigQuery migration path.
+Rationale: this stack maximizes performance, reliability, and judging readiness while keeping deployment fully automated and self-contained.
 
 ## 2. High-Level System Diagram (described)
 
 ```
-[Citizen Web App] --report(text/photo/voice)--> [FastAPI /reports]
+[Citizen Web App] --report(text/photo/voice)--> [FastAPI /api/reports]
                                                         |
                                                         v
                                           [Gemini multimodal analysis]
-                                          (function-calls get_air_quality,
-                                           get_weather tools)
+                                          (structured vision + schema validation)
                                                         |
                                                         v
                                       [Risk Engine: hotspot score, spike
-                                       probability (XGBoost), cross-border
-                                       risk model]
+                                       probability (Physics-Grounded Predictor),
+                                       cross-border transport model]
                                                         |
                           -------------------------------------------------
                           |                       |                       |
                           v                       v                       v
-                   [Firestore: reports/     [Alerts queue]         [Public Map API]
+                   [Storage: reports/      [Alerts queue]         [Public Map API]
                     hotspots/alerts]              |
                                                    v
                                        [Authority Dashboard (React)]
-                                       ack / escalate / log action
+                                       ack / dispatch / escalate action
 ```
 
 ## 3. Backend Modules (FastAPI)
 
 - `routers/reports.py` — POST citizen report (text/photo/voice ref), GET report by id
 - `routers/analysis.py` — calls Gemini service, returns structured event JSON
-- `routers/hotspots.py` — CRUD + query hotspots by bbox/time/severity
-- `routers/predict.py` — 6h/12h/24h risk endpoint (wraps trained model)
+- `routers/hotspots.py` — query hotspots by country/severity
+- `routers/predict.py` — 6h/12h/24h risk endpoint (wraps physics-grounded model)
 - `routers/crossborder.py` — trans-boundary scenario endpoint
-- `routers/alerts.py` — authority queue, acknowledge/escalate/log
-- `services/gemini_service.py` — prompt templates, function-calling tools, JSON schema validation, retry/fallback ("demo mode") logic
+- `routers/alerts.py` — authority queue, acknowledge/dispatch/escalate
+- `services/gemini_service.py` — prompt templates, JSON schema validation, retry/fallback logic
 - `services/data_service.py` — OpenAQ + Open-Meteo clients with caching; seeded sensor/satellite loader
 - `services/risk_engine.py` — combines Gemini output + live/simulated data into hotspot & spike scores
-- `services/model.py` — loads trained XGBoost model; exposes `predict(features) -> {6h, 12h, 24h}`
+- `services/model.py` — physics-grounded atmospheric risk predictor; exposes `predict(features) -> {6h, 12h, 24h}`
 - `models/schemas.py` — Pydantic models mirroring the Gemini JSON schema and API contracts
 
 ## 4. Frontend Structure (React, JS/JSX)

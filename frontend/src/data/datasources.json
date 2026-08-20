@@ -48,8 +48,8 @@
     "status": "active"
   },
   {
-    "id": "src_xgboost",
-    "name": "Physics-Grounded Atmospheric XGBoost Regressor",
+    "id": "src_risk_predictor",
+    "name": "Physics-Grounded Atmospheric Risk Predictor",
     "type": "predictive_model",
     "coverage": "Active BRICS Hotspot Airsheds",
     "parameters": ["6h / 12h / 24h AQI Outlook", "Spike Probability", "Uncertainty Lower/Upper Bounds"],

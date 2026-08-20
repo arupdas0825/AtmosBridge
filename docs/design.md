@@ -74,7 +74,7 @@ Google environmental-intelligence / modern command-center aesthetic — closer t
 6. **Global / BRICS Map** — Core geospatial situational awareness screen; BRICS country tabs, layer toggles (Hotspots, Ground Sensors, Winds, Trans-Boundary Plumes, Satellite AOD), timeline scrubber (Live, -6h, -24h), and interactive hotspot card drawers.
 7. **Hotspot Explorer** — Filterable active hotspot catalog; search bar, severity filter, risk/population sorting, and detailed metric cards linking to Event Details.
 8. **Pollution Event Details** — Evidence photo, structured Gemini summary, nearest ground sensor telemetry cluster table, meteorological wind dispersion values, and direct forecast/advisory triggers.
-9. **Prediction Timeline** — 6h/12h/24h atmospheric spike forecast with Recharts time-series chart, model architecture metadata (XGBoost Regressor), and explainable feature-importance breakdown.
+9. **Prediction Timeline** — 6h/12h/24h atmospheric spike forecast with Recharts time-series chart, model architecture metadata (Physics-Grounded Atmospheric Risk Predictor), and explainable feature-importance breakdown.
 10. **Authority Dashboard** — Municipal alert triage queue sorted by risk score; status filter tabs (All, Pending, Acknowledged, Escalated, Resolved), operational KPI cards, and quick Acknowledge / Escalate triggers.
 11. **Alert Details** — Full incident command dossier: evidence, AI explanation, recommended intervention checklist, officer action log notes input, dispatch status transitions, and audit log history.
 12. **Cross-Border Intelligence** — Trans-boundary drift simulation: source/target region cards, estimated plume arrival window, wind vector trajectory, and bilateral notification advisory transmission trigger.

@@ -13,14 +13,17 @@ import {
   Globe2, 
   AlertTriangle,
   ArrowRight,
+  ArrowDown,
   Info,
   MapPin,
   Flame,
   Activity,
   Layers,
-  Sparkles
+  Sparkles,
+  Radio,
+  FileCheck
 } from 'lucide-react';
-import { MapContainer, TileLayer, Polygon, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Polygon, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 // Leaflet Map Controller to fly to active scenario
@@ -95,7 +98,7 @@ export default function CrossBorderIntelligence() {
   const targetPoint = poly.length > 2 ? poly[Math.floor(poly.length / 2)] : [31.85, 75.10];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 font-sans">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-sans">
       
       {/* Header */}
       <div className="space-y-1">
@@ -103,37 +106,106 @@ export default function CrossBorderIntelligence() {
           <div className="flex items-center gap-2">
             <Globe2 className="w-6 h-6 text-brand" />
             <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
-              Cross-Border Atmospheric Intelligence
+              Cross-Border Atmospheric Transport Intelligence
             </h1>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-purple-100 text-purple-800 border border-purple-200">
-            SIMULATED TRANSPORT SCENARIOS
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            {scenarios.length > 0 ? 'ACTIVE CORRIDORS' : 'MONITORING ACTIVE'}
           </span>
         </div>
         <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-          Analyze potential pollution transport pathways across administrative boundaries using meteorological wind vectors and boundary layer drift models.
+          Evaluate potential pollution transport pathways across regional and sovereign boundaries using meteorological wind vectors and boundary layer drift models.
         </p>
       </div>
 
-      {/* Scenario Selection Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs border-b border-slate-200">
-        {scenarios.map((sc) => {
-          const isSelected = current?.id === sc.id;
-          return (
-            <button
-              key={sc.id}
-              onClick={() => handleSelectScenario(sc)}
-              className={`px-4 py-2 rounded-full font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                isSelected
-                  ? 'bg-brand text-white shadow-xs'
-                  : 'bg-white text-ink-muted hover:text-ink border border-slate-200'
-              }`}
-            >
-              <Wind className="w-3.5 h-3.5" />
-              <span>{sc.country_source} → {sc.country_target.split(' ')[0]}</span>
-            </button>
-          );
-        })}
+      {scenarios.length === 0 ? (
+        <div className="card-surface p-12 text-center space-y-3 border-dashed border-2 border-slate-200">
+          <Globe2 className="w-10 h-10 text-slate-400 mx-auto" />
+          <h3 className="font-bold text-base text-ink">No verified cross-border event currently detected.</h3>
+          <p className="text-xs text-ink-muted max-w-md mx-auto">
+            Atmospheric transport corridors are continuously evaluated against regional wind vectors and active emission sources. Bilateral alerts will trigger when trans-boundary drift is detected.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {/* Corridor Selector Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs border-b border-slate-200">
+            {scenarios.map((sc) => {
+              const isSelected = current?.id === sc.id;
+              return (
+                <button
+                  key={sc.id}
+                  onClick={() => handleSelectScenario(sc)}
+                  className={`px-4 py-2 rounded-full font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-brand text-white shadow-xs'
+                      : 'bg-white text-ink-muted hover:text-ink border border-slate-200'
+                  }`}
+                >
+                  <Wind className="w-3.5 h-3.5" />
+                  <span>{sc.country_source} → {sc.country_target.split(' ')[0]}</span>
+                </button>
+              );
+            })}
+          </div>
+
+      {/* 4-STAGE STRUCTURED INTELLIGENCE PIPELINE (P1.5) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Stage 1: SOURCE REGION */}
+        <div className="card-surface p-4 space-y-2 border-t-3 border-t-risk-high">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">1. Source Region</span>
+            <ProvenanceTag type="observed" size="xs" />
+          </div>
+          <div className="font-bold text-sm text-ink">
+            {current?.source_region || 'Insufficient data for reliable estimate'}
+          </div>
+          <div className="text-[11px] text-ink-muted">
+            Pollutant: <b className="text-ink">{current?.pollutant_type || 'Particulates'}</b>
+          </div>
+        </div>
+
+        {/* Stage 2: ATMOSPHERIC TRANSPORT */}
+        <div className="card-surface p-4 space-y-2 border-t-3 border-t-teal-600">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">2. Atmospheric Transport</span>
+            <ProvenanceTag type="observed" size="xs" />
+          </div>
+          <div className="font-mono font-bold text-sm text-ink">
+            {current?.wind_vector ? `${current.wind_vector.speed_kmh} km/h from ${current.wind_vector.direction}` : 'Insufficient data for reliable estimate'}
+          </div>
+          <div className="text-[11px] text-ink-muted">
+            Vector: <b className="text-ink">{current?.wind_vector?.bearing_deg ? `${current.wind_vector.bearing_deg}° bearing` : 'Regional drift'}</b>
+          </div>
+        </div>
+
+        {/* Stage 3: POTENTIAL DOWNWIND IMPACT */}
+        <div className="card-surface p-4 space-y-2 border-t-3 border-t-purple-600">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">3. Potential Downwind Impact</span>
+            <ProvenanceTag type="predicted" size="xs" />
+          </div>
+          <div className="font-bold text-sm text-ink">
+            {current?.target_region || 'Insufficient data for reliable estimate'}
+          </div>
+          <div className="text-[11px] text-ink-muted">
+            Transit Window: <b className="text-ink font-mono">{current?.estimated_arrival_window || 'Insufficient data'}</b>
+          </div>
+        </div>
+
+        {/* Stage 4: COORDINATED RESPONSE */}
+        <div className="card-surface p-4 space-y-2 border-t-3 border-t-emerald-600">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider">4. Coordinated Response</span>
+            <ProvenanceTag type="inferred" size="xs" />
+          </div>
+          <div className="font-bold text-sm text-emerald-800">
+            {isSent ? 'Advisory Dispatched' : 'Action Pending Review'}
+          </div>
+          <div className="text-[11px] text-ink-muted">
+            Protocol: <b className="text-ink">Bilateral Notification</b>
+          </div>
+        </div>
       </div>
 
       {/* Main Grid: Visual Map Centerpiece + Corridor Dossier Card */}
@@ -242,6 +314,7 @@ export default function CrossBorderIntelligence() {
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-purple-100 text-purple-800">
                     POTENTIAL TRANSPORT PATHWAY
                   </span>
+                  <ProvenanceTag type="predicted" size="xs" />
                 </div>
                 <h2 className="text-lg font-extrabold text-ink pt-1">
                   {current.title}
@@ -254,7 +327,7 @@ export default function CrossBorderIntelligence() {
                   <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider block">Source Region:</span>
                   <div className="font-semibold text-ink flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-risk-high" />
-                    <span>{current.source_region}</span>
+                    <span>{current.source_region || 'Insufficient data for reliable estimate'}</span>
                   </div>
                 </div>
 
@@ -262,14 +335,14 @@ export default function CrossBorderIntelligence() {
                   <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider block">Downwind Receptor:</span>
                   <div className="font-semibold text-ink flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-purple-700" />
-                    <span>{current.target_region}</span>
+                    <span>{current.target_region || 'Insufficient data for reliable estimate'}</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="p-3 bg-surface rounded-card border border-slate-200 space-y-1">
                     <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider block">Pollutant:</span>
-                    <div className="font-semibold text-ink truncate">{current.pollutant_type}</div>
+                    <div className="font-semibold text-ink truncate">{current.pollutant_type || 'Particulate Matter'}</div>
                   </div>
 
                   <div className="p-3 bg-surface rounded-card border border-slate-200 space-y-1">
@@ -282,13 +355,13 @@ export default function CrossBorderIntelligence() {
                   <div className="p-3 bg-surface rounded-card border border-slate-200 space-y-1">
                     <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider block">Wind Observation:</span>
                     <div className="font-mono font-bold text-ink">
-                      {current.wind_vector?.speed_kmh} km/h {current.wind_vector?.direction}
+                      {current.wind_vector ? `${current.wind_vector.speed_kmh} km/h ${current.wind_vector.direction}` : 'Insufficient data for reliable estimate'}
                     </div>
                   </div>
 
                   <div className="p-3 bg-surface rounded-card border border-slate-200 space-y-1">
                     <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider block">Estimated Window:</span>
-                    <div className="font-mono font-bold text-ink">{current.estimated_arrival_window}</div>
+                    <div className="font-mono font-bold text-ink">{current.estimated_arrival_window || 'Insufficient data for reliable estimate'}</div>
                   </div>
                 </div>
               </div>
@@ -300,7 +373,7 @@ export default function CrossBorderIntelligence() {
                   <span>Recommended Bilateral Coordination Protocol</span>
                 </span>
                 <p className="text-xs text-ink-muted leading-relaxed bg-brand-surface/40 p-3.5 rounded-card border border-brand/20">
-                  {current.recommended_crossborder_action}
+                  {current.recommended_crossborder_action || 'Insufficient data for bilateral coordination recommendation.'}
                 </p>
               </div>
 
@@ -325,9 +398,10 @@ export default function CrossBorderIntelligence() {
             </div>
 
           </div>
-
         </div>
       )}
+    </div>
+  )}
 
     </div>
   );

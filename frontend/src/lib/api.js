@@ -1,19 +1,11 @@
-import hotspotsData from '../data/hotspots.json';
-import sensorsData from '../data/sensors.json';
-import crossborderData from '../data/crossborder.json';
-import alertsData from '../data/alerts.json';
-import datasourcesData from '../data/datasources.json';
-import satelliteData from '../data/satellite.json';
-import auditLogData from '../data/audit_log.json';
-
 const API_BASE = '/api';
 
 // Helper to fetch with timeout so UI never hangs
-async function fetchWithTimeout(url, options = {}, timeoutMs = 3000) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 4000) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, { credentials: 'same-origin', ...options, credentials: options.credentials || 'same-origin', signal: controller.signal });
+    const response = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(timeoutId);
     return response;
   } catch (err) {
@@ -30,44 +22,138 @@ export async function submitReport(formData) {
     const res = await fetchWithTimeout(`${API_BASE}/reports`, {
       method: 'POST',
       body: formData,
-    }, 6000);
+    }, 8000);
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Failed to submit report' }));
       throw new Error(err.detail || `Server error: ${res.status}`);
     }
     return await res.json();
   } catch (error) {
-    console.warn('[API submitReport fallback to client model]', error);
-    
-    // Deterministic, high-confidence fallback report
-    const desc = formData.get('description') || 'Unpermitted industrial discharge with black smoke plume.';
-    return {
-      id: `rep_${Math.random().toString(36).substring(2, 9)}`,
-      created_at: new Date().toISOString(),
-      status: 'analyzed',
-      description: desc,
-      latitude: parseFloat(formData.get('latitude')) || 28.5355,
-      longitude: parseFloat(formData.get('longitude')) || 77.2690,
-      location_name: formData.get('location_name') || 'Hyperlocal Monitoring Zone',
-      language: formData.get('language') || 'en',
-      voice_transcript: formData.get('voice_transcript'),
-      photo_url: 'https://images.unsplash.com/photo-1579240830604-fa9a781258d4?w=600&auto=format&fit=crop&q=60',
-      analysis: {
-        event_type: 'industrial_smoke',
-        pollution_source: 'Unpermitted industrial combustion & stack emissions',
-        severity: 4,
-        confidence: 0.93,
-        visual_evidence: ['Dense dark particulate plume', 'Ground-level dispersion', 'Visible stack discharge'],
-        recommended_verification: ['Dispatch municipal environmental inspector', 'Verify CEMS stack telemetry', 'Cross-check nearest micro-sensor'],
-        explanation: 'Thick particulate plume observed under stagnant atmospheric conditions, producing acute localized respiratory exposure.',
-        is_demo_fallback: true
-      },
-      provenance: {
-        analysis: 'inferred',
-        report_input: 'observed'
-      }
-    };
+    console.error('[API submitReport error]', error);
+    throw error;
   }
+}
+
+/**
+ * Fetch Verified Live Air Quality Telemetry
+ */
+export async function getLiveAirQuality(lat = 28.6139, lon = 77.2090, forceRefresh = false) {
+  // 1. Try backend server endpoint
+  try {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/data-sources/air-quality?lat=${lat}&lon=${lon}&force_refresh=${forceRefresh}`,
+      {},
+      5000
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.is_live) return data;
+    }
+  } catch (e) {
+    // Continue to direct public client fallback
+  }
+
+  // 2. Direct client query to Open-Meteo Air Quality API (public, no key required)
+  try {
+    const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi,european_aqi`;
+    const resp = await fetchWithTimeout(url, {}, 5000);
+    if (resp.ok) {
+      const json = await resp.json();
+      const current = json.current || {};
+      const pollutants = {};
+
+      if (current.pm2_5 !== undefined && current.pm2_5 !== null) {
+        pollutants.pm25 = { value: Math.round(current.pm2_5 * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+      }
+      if (current.pm10 !== undefined && current.pm10 !== null) {
+        pollutants.pm10 = { value: Math.round(current.pm10 * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+      }
+      if (current.nitrogen_dioxide !== undefined && current.nitrogen_dioxide !== null) {
+        pollutants.no2 = { value: Math.round(current.nitrogen_dioxide * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+      }
+      if (current.sulphur_dioxide !== undefined && current.sulphur_dioxide !== null) {
+        pollutants.so2 = { value: Math.round(current.sulphur_dioxide * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+      }
+      if (current.carbon_monoxide !== undefined && current.carbon_monoxide !== null) {
+        pollutants.co = { value: Math.round(current.carbon_monoxide * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+      }
+      if (current.ozone !== undefined && current.ozone !== null) {
+        pollutants.o3 = { value: Math.round(current.ozone * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+      }
+
+      return {
+        is_live: true,
+        status: 'active',
+        latitude: lat,
+        longitude: lon,
+        us_aqi: current.us_aqi,
+        european_aqi: current.european_aqi,
+        pollutants,
+        timestamp: current.time,
+        provenance: 'observed',
+        source: 'Open-Meteo / Copernicus Atmospheric Service'
+      };
+    }
+  } catch (err) {
+    console.warn('[Direct Open-Meteo Air Quality fallback error]', err);
+  }
+
+  // 3. Return clean unavailable state if no live source is reachable
+  return {
+    is_live: false,
+    status: 'unavailable',
+    message: 'No current observations available for this location',
+    pollutants: {},
+    provenance: 'observed'
+  };
+}
+
+/**
+ * Fetch Verified Live Weather Telemetry
+ */
+export async function getLiveWeather(lat = 28.6139, lon = 77.2090, forceRefresh = false) {
+  try {
+    const res = await fetchWithTimeout(
+      `${API_BASE}/data-sources/weather?lat=${lat}&lon=${lon}&force_refresh=${forceRefresh}`,
+      {},
+      4000
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.is_live) return data;
+    }
+  } catch (e) {
+    // Continue to direct public client fallback
+  }
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,surface_pressure`;
+    const resp = await fetchWithTimeout(url, {}, 4000);
+    if (resp.ok) {
+      const json = await resp.json();
+      const current = json.current || {};
+      return {
+        is_live: true,
+        temperature: current.temperature_2m,
+        humidity: current.relative_humidity_2m,
+        wind_speed: current.wind_speed_10m,
+        wind_direction: current.wind_direction_10m,
+        surface_pressure: current.surface_pressure,
+        timestamp: current.time,
+        provenance: 'observed',
+        source: 'Open-Meteo Public Meteorological Service'
+      };
+    }
+  } catch (err) {
+    console.warn('[Direct Open-Meteo Weather fallback error]', err);
+  }
+
+  return {
+    is_live: false,
+    status: 'unavailable',
+    message: 'Live meteorological data unavailable for this location',
+    provenance: 'observed'
+  };
 }
 
 /**
@@ -79,18 +165,9 @@ export async function getHotspots(country = null) {
     const res = await fetchWithTimeout(url, {}, 3000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    throw new Error('Empty response');
+    return Array.isArray(data) ? data : [];
   } catch (e) {
-    // Canonical Deterministic Dataset (Production Parity)
-    if (!country || country === 'all') {
-      return [...hotspotsData];
-    }
-    const filtered = hotspotsData.filter(h => 
-      h.country?.toLowerCase() === country.toLowerCase() ||
-      h.country?.toLowerCase().includes(country.toLowerCase())
-    );
-    return filtered.length > 0 ? filtered : [...hotspotsData];
+    return [];
   }
 }
 
@@ -100,11 +177,10 @@ export async function getHotspots(country = null) {
 export async function getHotspotById(id) {
   try {
     const res = await fetchWithTimeout(`${API_BASE}/hotspots/${id}`, {}, 3000);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return null;
     return await res.json();
   } catch (e) {
-    const found = hotspotsData.find(h => h.id === id);
-    return found || hotspotsData[0];
+    return null;
   }
 }
 
@@ -120,72 +196,20 @@ export async function getPrediction(hotspotId = null, lat = null, lon = null) {
     if (lon) params.append('longitude', lon);
     if (params.toString()) url += `?${params.toString()}`;
 
-    const res = await fetchWithTimeout(url, {}, 3000);
+    const res = await fetchWithTimeout(url, {}, 4000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (e) {
-    const targetHotspot = hotspotsData.find(h => h.id === hotspotId) || hotspotsData[0];
-    const baseAqi = (targetHotspot.pollutants?.pm25?.value || 180) * 1.8;
-
     return {
-      hotspot_id: targetHotspot.id,
-      latitude: targetHotspot.latitude,
-      longitude: targetHotspot.longitude,
-      forecast: [
-        { 
-          horizon_hours: 6, 
-          timestamp: new Date(Date.now() + 6*3600*1000).toISOString(), 
-          predicted_aqi: Math.round(baseAqi * 1.15), 
-          spike_probability: 0.88, 
-          confidence_lower: Math.round(baseAqi * 0.95), 
-          confidence_upper: Math.round(baseAqi * 1.35), 
-          provenance: 'predicted' 
-        },
-        { 
-          horizon_hours: 12, 
-          timestamp: new Date(Date.now() + 12*3600*1000).toISOString(), 
-          predicted_aqi: Math.round(baseAqi * 1.28), 
-          spike_probability: 0.94, 
-          confidence_lower: Math.round(baseAqi * 1.05), 
-          confidence_upper: Math.round(baseAqi * 1.48), 
-          provenance: 'predicted' 
-        },
-        { 
-          horizon_hours: 24, 
-          timestamp: new Date(Date.now() + 24*3600*1000).toISOString(), 
-          predicted_aqi: Math.round(baseAqi * 0.92), 
-          spike_probability: 0.62, 
-          confidence_lower: Math.round(baseAqi * 0.78), 
-          confidence_upper: Math.round(baseAqi * 1.12), 
-          provenance: 'predicted' 
-        }
-      ],
-      feature_importance: [
-        { 
-          feature: 'Atmospheric Stagnation & Wind Dispersion', 
-          importance: 0.38, 
-          description: `Wind speed of ${targetHotspot.weather?.wind_speed || 4.5} km/h restricts horizontal particulate flushing.` 
-        },
-        { 
-          feature: 'Citizen Sighting Incident Velocity', 
-          importance: 0.32, 
-          description: `${targetHotspot.reports_count || 9} clustered citizen reports indicate active surface burning.` 
-        },
-        { 
-          feature: 'Night Boundary Inversion & Humidity', 
-          importance: 0.16, 
-          description: `Relative humidity of ${targetHotspot.weather?.humidity || 68}% lowers mixing layer ceiling.` 
-        },
-        { 
-          feature: 'Satellite Aerosol Optical Depth Baseline', 
-          importance: 0.14, 
-          description: `Regional AOD index of ${targetHotspot.satellite_aerosol_index?.value || 0.88} indicates elevated background loading.` 
-        }
-      ],
+      hotspot_id: hotspotId,
+      latitude: lat,
+      longitude: lon,
+      forecast: [],
+      feature_importance: [],
       model_metadata: {
-        model_type: 'Physics-Grounded XGBoost Atmospheric Regressor',
-        training_dataset: 'Multi-City Historical AQI & Meteorological Corpus',
-        provenance: 'predicted'
+        model_type: 'Physics-Grounded Atmospheric Risk Predictor',
+        status: 'insufficient_data',
+        message: 'Insufficient observational telemetry to compute 24h dispersion trajectory.'
       }
     };
   }
@@ -200,14 +224,9 @@ export async function getCrossBorderScenarios(scenarioId = null) {
     const res = await fetchWithTimeout(url, {}, 3000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    throw new Error('Empty response');
+    return Array.isArray(data) ? data : [];
   } catch (e) {
-    if (scenarioId) {
-      const found = crossborderData.find(s => s.id === scenarioId);
-      return found ? [found] : [...crossborderData];
-    }
-    return [...crossborderData];
+    return [];
   }
 }
 
@@ -220,11 +239,9 @@ export async function getAlerts(status = 'all') {
     const res = await fetchWithTimeout(url, {}, 3000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    throw new Error('Empty response');
+    return Array.isArray(data) ? data : [];
   } catch (e) {
-    if (!status || status === 'all') return [...alertsData];
-    return alertsData.filter(a => a.status === status);
+    return [];
   }
 }
 
@@ -234,11 +251,10 @@ export async function getAlerts(status = 'all') {
 export async function getAlertById(id) {
   try {
     const res = await fetchWithTimeout(`${API_BASE}/alerts/${id}`, {}, 3000);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) return null;
     return await res.json();
   } catch (e) {
-    const found = alertsData.find(a => a.id === id);
-    return found || alertsData[0];
+    return null;
   }
 }
 
@@ -255,22 +271,8 @@ export async function updateAlert(id, action, actor = 'Municipal Officer', notes
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (e) {
-    console.warn('[API updateAlert client simulation fallback]', e);
-    const existing = alertsData.find(a => a.id === id) || alertsData[0];
-    const newStatus = action === 'acknowledge' ? 'acknowledged' : action === 'dispatch' ? 'escalated' : 'resolved';
-    return {
-      ...existing,
-      status: newStatus,
-      action_log: [
-        ...(existing.action_log || []),
-        {
-          action,
-          actor,
-          timestamp: new Date().toISOString(),
-          notes: notes || `Operational action ${action} confirmed by officer.`
-        }
-      ]
-    };
+    console.error('[API updateAlert error]', e);
+    throw e;
   }
 }
 
@@ -282,10 +284,9 @@ export async function getDataSources() {
     const res = await fetchWithTimeout(`${API_BASE}/data-sources`, {}, 3000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    throw new Error('Empty response');
+    return Array.isArray(data) ? data : [];
   } catch (e) {
-    return [...datasourcesData];
+    return [];
   }
 }
 
@@ -298,15 +299,9 @@ export async function getSensors(country = null) {
     const res = await fetchWithTimeout(url, {}, 3000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    throw new Error('Empty response');
+    return Array.isArray(data) ? data : [];
   } catch (e) {
-    if (!country || country === 'all') return [...sensorsData];
-    const filtered = sensorsData.filter(s => 
-      s.country?.toLowerCase() === country.toLowerCase() ||
-      s.country?.toLowerCase().includes(country.toLowerCase())
-    );
-    return filtered.length > 0 ? filtered : [...sensorsData];
+    return [];
   }
 }
 
@@ -318,10 +313,9 @@ export async function getSatelliteGrid() {
     const res = await fetchWithTimeout(`${API_BASE}/data-sources/satellite`, {}, 3000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    throw new Error('Empty response');
+    return Array.isArray(data) ? data : [];
   } catch (e) {
-    return [...satelliteData];
+    return [];
   }
 }
 
@@ -333,9 +327,8 @@ export async function getAuditLog() {
     const res = await fetchWithTimeout(`${API_BASE}/data-sources/audit-log`, {}, 3000);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) return data;
-    throw new Error('Empty response');
+    return Array.isArray(data) ? data : [];
   } catch (e) {
-    return [...auditLogData];
+    return [];
   }
 }

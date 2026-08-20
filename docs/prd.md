@@ -93,8 +93,8 @@ This exact flow is the required 3–5 minute demo path (see [`docs/demo-script.m
 
 ## 6. Prediction Layer
 
-Inputs: recent AQI history, temperature, humidity, wind speed/direction, hotspot/event history.
-Model: **gradient-boosted regression (XGBoost/LightGBM)** trained on public historical AQI + weather data, or a documented rule-weighted heuristic as fallback if training data is thin. Outputs: 6h/12h/24h spike-risk probability, shown with a confidence band and explicit "predicted, not measured" label. No black-box unexplained numbers — a feature-importance summary is always available.
+Inputs: recent AQI history, temperature, humidity, wind speed/direction, hotspot/event velocity.
+Model: **Physics-Grounded Atmospheric Risk Predictor** evaluating ventilation coefficients, thermal inversion boundaries, and stagnation risks. Outputs: 6h/12h/24h spike-risk probability, shown with a confidence band and explicit "predicted, not measured" label. No black-box unexplained numbers — a feature-importance summary is always available.
 
 ---
 
@@ -106,7 +106,7 @@ Country/region selector spans India, Brazil, Russia, China, South Africa. Demo s
 
 ## 8. Geospatial Experience
 
-Google Maps Platform map with togglable layers (AQI/risk, citizen reports, sensors, hotspots, predicted movement, industrial/agricultural zones, wind vectors, admin boundaries); click-to-inspect hotspot; filters by pollutant/severity/time; country selector; timeline playback. Layer count is capped in the default view to avoid clutter — advanced layers live behind a "More layers" panel.
+Interactive Leaflet map with CartoDB Dark Matter tiles and togglable layers (AQI/risk, citizen reports, sensors, hotspots, predicted movement, wind vectors); click-to-inspect hotspot; filters by pollutant/severity/time; country selector; timeline playback.
 
 ---
 

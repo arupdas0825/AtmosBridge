@@ -7,30 +7,28 @@ import EmptyState from '../components/common/EmptyState';
 import { getAlerts, updateAlert } from '../lib/api';
 import { 
   Building2, 
-  ShieldAlert, 
-  MapPin, 
-  Users, 
-  Clock, 
   CheckCircle2, 
   Send, 
-  RefreshCw, 
-  Filter, 
-  Activity, 
-  Flame, 
-  Radio, 
-  Camera, 
-  FileText, 
-  Sparkles, 
-  ChevronRight, 
-  ChevronDown,
-  Layers, 
-  ArrowRight, 
   AlertTriangle, 
-  Loader2, 
+  Clock, 
+  Sparkles, 
+  MapPin, 
+  Filter, 
+  ShieldAlert, 
+  ArrowRight, 
+  FileText, 
+  Radio, 
+  ChevronDown, 
   History, 
-  ListChecks, 
+  Camera, 
+  RefreshCw, 
+  Activity, 
   UserCheck, 
-  Globe2 
+  Loader2, 
+  ListChecks, 
+  Layers, 
+  ExternalLink,
+  Shield
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -38,64 +36,68 @@ import L from 'leaflet';
 function IncidentMapController({ coords }) {
   const map = useMap();
   useEffect(() => {
-    if (coords && coords[0] && coords[1]) {
-      map.flyTo(coords, 13, { duration: 0.8 });
+    if (coords && coords.length === 2) {
+      map.setView(coords, 14, { animate: true });
     }
   }, [coords, map]);
   return null;
 }
 
 const incidentPinIcon = L.divIcon({
-  className: 'authority-incident-pin',
-  html: `<div style="background-color:#B3251F;width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 10px rgba(179,37,31,0.8);"></div>`,
-  iconSize: [16, 16],
-  iconAnchor: [8, 8]
+  className: 'incident-pin',
+  html: `<div style="background-color:#B3251F;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(179,37,31,0.8);"></div>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]
 });
 
 export default function AuthorityDashboard() {
-  const { 
-    t, 
-    navigateTo, 
-    setActiveAlertId, 
-    refreshData, 
-    alertsList, 
-    setAlertsList 
-  } = useApp();
-
-  const [statusFilter, setStatusFilter] = useState('all');
+  const { t, activeAlertId, setActiveAlertId, navigateTo, setPendingAlertsCount } = useApp();
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedIncident, setSelectedIncident] = useState(null);
-  const [officerNotes, setOfficerNotes] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [actionNotes, setActionNotes] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // Progressive Disclosure Accordions
-  const [showMap, setShowMap] = useState(false);
-  const [showEvidencePhoto, setShowEvidencePhoto] = useState(false);
   const [showAuditTrail, setShowAuditTrail] = useState(false);
+  const [showEvidencePhoto, setShowEvidencePhoto] = useState(true);
+  const [showMap, setShowMap] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Sync selected incident when alerts change or on mount
-  useEffect(() => {
-    if (alertsList && alertsList.length > 0) {
-      if (!selectedIncident || !alertsList.some(a => a.id === selectedIncident.id)) {
-        setSelectedIncident(alertsList[0]);
+  const loadData = async () => {
+    try {
+      const data = await getAlerts('all');
+      setAlerts(data || []);
+      setPendingAlertsCount((data || []).filter(a => a.status === 'pending').length);
+      
+      if (data && data.length > 0) {
+        const found = data.find(a => a.id === activeAlertId) || data[0];
+        setSelectedIncident(found);
       } else {
-        const updated = alertsList.find(a => a.id === selectedIncident.id);
-        if (updated) setSelectedIncident(updated);
+        setSelectedIncident(null);
       }
+    } catch (err) {
+      console.error(err);
+      setAlerts([]);
+      setSelectedIncident(null);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
     }
-  }, [alertsList]);
+  };
 
-  // Filter alerts by status / severity
-  const filteredAlerts = alertsList.filter((a) => {
-    if (statusFilter === 'all') return true;
-    if (statusFilter === 'critical') return a.severity === 'critical';
-    if (statusFilter === 'high') return a.severity === 'high';
-    return a.status === statusFilter;
-  });
+  useEffect(() => {
+    loadData();
+  }, [activeAlertId]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    loadData();
+  };
 
   const handleSelectIncident = (alert) => {
     setSelectedIncident(alert);
     setActiveAlertId(alert.id);
+    setActionNotes('');
   };
 
   const handleAction = async (actionType) => {
@@ -103,69 +105,47 @@ export default function AuthorityDashboard() {
     setActionLoading(true);
     try {
       const updated = await updateAlert(
-        selectedIncident.id,
-        actionType,
-        'Officer Sharma (Municipal Lead)',
-        officerNotes || `Operational action ${actionType} recorded in compliance log.`
+        selectedIncident.id, 
+        actionType, 
+        'Municipal Officer', 
+        actionNotes || `Operational status transitioned to ${actionType}.`
       );
       
-      const newStatusMap = {
-        acknowledge: 'acknowledged',
-        dispatch: 'escalated',
-        resolve: 'resolved'
-      };
-
-      const finalAlert = updated || {
-        ...selectedIncident,
-        status: newStatusMap[actionType] || 'acknowledged',
-        action_log: [
-          ...(selectedIncident.action_log || []),
-          {
-            action: actionType,
-            actor: 'Officer Sharma (Municipal Lead)',
-            timestamp: new Date().toISOString(),
-            notes: officerNotes || `Operational action ${actionType} recorded in compliance log.`
-          }
-        ]
-      };
-
-      setAlertsList(prev => prev.map(a => a.id === finalAlert.id ? finalAlert : a));
-      setSelectedIncident(finalAlert);
-      setOfficerNotes('');
-      refreshData();
-    } catch (e) {
-      console.error(e);
+      const newAlerts = alerts.map(a => a.id === updated.id ? updated : a);
+      setAlerts(newAlerts);
+      setSelectedIncident(updated);
+      setPendingAlertsCount(newAlerts.filter(a => a.status === 'pending').length);
+      setActionNotes('');
+    } catch (err) {
+      console.error('Failed to update incident', err);
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refreshData();
-    setTimeout(() => setIsRefreshing(false), 500);
-  };
+  if (loading) return <Loader text="Loading operational command queue and telemetry records..." />;
 
-  // Operational metrics
-  const pendingCount = alertsList.filter(a => a.status === 'pending').length;
-  const criticalCount = alertsList.filter(a => a.severity === 'critical').length;
-  const dispatchCount = alertsList.filter(a => a.status === 'escalated').length;
-  const resolvedCount = alertsList.filter(a => a.status === 'resolved').length;
+  // Filtered queue
+  const filteredAlerts = alerts.filter(a => {
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'critical') return a.severity === 'critical' || a.severity === 4;
+    return a.status === statusFilter;
+  });
 
-  const currentCoords = selectedIncident?.latitude && selectedIncident?.longitude 
-    ? [selectedIncident.latitude, selectedIncident.longitude] 
+  const pendingCount = alerts.filter(a => a.status === 'pending').length;
+  const criticalCount = alerts.filter(a => a.severity === 'critical' || a.severity === 4 || a.severity === 'high' || a.severity === 3).length;
+  const dispatchCount = alerts.filter(a => a.status === 'escalated').length;
+  const resolvedCount = alerts.filter(a => a.status === 'resolved').length;
+  const corridorsCount = alerts.filter(a => a.cross_border_risk).length;
+
+  const currentCoords = selectedIncident && selectedIncident.latitude && selectedIncident.longitude
+    ? [selectedIncident.latitude, selectedIncident.longitude]
     : [28.5355, 77.2690];
 
-  const evidence = selectedIncident?.evidence_count || {
-    citizen_reports: 6,
-    photos: 1,
-    sensor_anomalies: 1
-  };
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 font-sans">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 font-sans">
       
-      {/* 1. Header & Live Operational Status */}
+      {/* 1. Header Ribbon */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -177,11 +157,11 @@ export default function AuthorityDashboard() {
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>LIVE TELEMETRY ACTIVE</span>
+              <span>OPERATIONAL COMMAND QUEUE</span>
             </span>
           </div>
           <p className="text-xs text-ink-muted">
-            Human-approved incident verification, multimodal triage, and multi-agency response dispatch.
+            Human-controlled incident triage, multimodal evidence verification, and multi-agency response coordination.
           </p>
         </div>
 
@@ -200,12 +180,12 @@ export default function AuthorityDashboard() {
       {/* 2. Operational KPI Summary Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="card-surface p-3 text-center space-y-0.5 border-l-3 border-l-rose-500">
-          <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Awaiting Review</span>
+          <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Pending Review</span>
           <div className="text-xl sm:text-2xl font-extrabold font-mono text-risk-critical">{pendingCount}</div>
         </div>
 
         <div className="card-surface p-3 text-center space-y-0.5 border-l-3 border-l-amber-500">
-          <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Critical Risk</span>
+          <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Critical/High Risk</span>
           <div className="text-xl sm:text-2xl font-extrabold font-mono text-risk-high">{criticalCount}</div>
         </div>
 
@@ -221,16 +201,14 @@ export default function AuthorityDashboard() {
 
         <div className="card-surface p-3 text-center space-y-0.5 border-l-3 border-l-purple-600 col-span-2 sm:col-span-1">
           <span className="text-[10px] text-ink-muted font-bold uppercase tracking-wider">Corridors Active</span>
-          <div className="text-xl sm:text-2xl font-extrabold font-mono text-purple-700">5</div>
+          <div className="text-xl sm:text-2xl font-extrabold font-mono text-purple-700">{corridorsCount}</div>
         </div>
       </div>
 
-      {/* 3. THREE-COLUMN OPERATIONAL WORKSPACE */}
+      {/* 3. OPERATIONAL WORKSPACE GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
-        {/* ============================================================ */}
-        {/* COLUMN 1: PRIORITY INCIDENT QUEUE (Left - 4 / 12 Cols) */}
-        {/* ============================================================ */}
+        {/* COLUMN 1: PRIORITY INCIDENT QUEUE (4 / 12 Cols) */}
         <div className="lg:col-span-4 card-surface p-3.5 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <span className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
@@ -268,8 +246,10 @@ export default function AuthorityDashboard() {
           {/* Incident Queue List */}
           <div className="space-y-2 max-h-[540px] overflow-y-auto pr-1">
             {filteredAlerts.length === 0 ? (
-              <div className="p-4 text-center text-xs text-ink-muted bg-surface rounded-card border border-dashed border-slate-200">
-                No incidents match filter.
+              <div className="p-8 text-center text-xs text-ink-muted bg-surface rounded-card border border-dashed border-slate-200 space-y-1.5">
+                <Shield className="w-6 h-6 text-slate-400 mx-auto" />
+                <p className="font-semibold text-ink">No active incidents in queue</p>
+                <p className="text-[11px]">Real citizen reports and physical monitoring triggers will appear here.</p>
               </div>
             ) : (
               filteredAlerts.map((al) => {
@@ -290,16 +270,16 @@ export default function AuthorityDashboard() {
                         <span className="font-mono text-[10px] font-bold text-ink">#{al.id}</span>
                       </div>
                       <span className="font-mono font-bold text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-ink">
-                        Risk {Math.round(al.risk_score)}
+                        Score {Math.round(al.risk_score || 50)}
                       </span>
                     </div>
 
                     <div className="font-bold text-ink text-xs truncate">{al.title}</div>
                     
                     <div className="text-[10px] text-ink-muted flex items-center justify-between">
-                      <span className="truncate">{al.location_name}</span>
+                      <span className="truncate">{al.location_name || 'Location recorded'}</span>
                       <span className="font-mono text-slate-400">
-                        {new Date(al.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {al.created_at ? new Date(al.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'}
                       </span>
                     </div>
                   </div>
@@ -309,177 +289,96 @@ export default function AuthorityDashboard() {
           </div>
         </div>
 
-        {/* ============================================================ */}
-        {/* COLUMN 2: INCIDENT INTELLIGENCE WORKSPACE (Center - 5 / 12 Cols) */}
-        {/* ============================================================ */}
-        <div className="lg:col-span-5 space-y-4">
-          {selectedIncident ? (
-            <div className="card-surface p-4 space-y-3.5">
-              
-              {/* Incident Header Ribbon */}
-              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <SeverityBadge severity={selectedIncident.severity} size="xs" />
-                    <span className="px-2 py-0.2 rounded-full text-[10px] font-mono font-bold bg-slate-100 uppercase border border-slate-200">
-                      {selectedIncident.status}
-                    </span>
-                    <ProvenanceTag type="inferred" size="xs" />
-                  </div>
-                  <h2 className="text-base font-extrabold text-ink leading-tight">
-                    {selectedIncident.title}
-                  </h2>
-                  <div className="text-[11px] text-ink-muted flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-brand" />
-                    <b>{selectedIncident.location_name}</b>, {selectedIncident.country}
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-[9px] text-ink-muted uppercase font-bold tracking-wider block">Assessed Risk</span>
-                  <div className="text-xl font-extrabold font-mono text-risk-critical">
-                    {Math.round(selectedIncident.risk_score)}<span className="text-[10px] font-normal text-ink-muted">/100</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Multi-Source Ground Evidence Pill */}
-              <div className="grid grid-cols-3 gap-2 text-center text-xs bg-surface p-2.5 rounded-card border border-slate-200">
-                <div>
-                  <span className="text-[9px] text-ink-muted uppercase block font-bold">Sightings</span>
-                  <span className="font-mono font-bold text-ink text-sm">{evidence.citizen_reports || 1}</span>
-                </div>
-                <div className="border-x border-slate-200">
-                  <span className="text-[9px] text-ink-muted uppercase block font-bold">Photos</span>
-                  <span className="font-mono font-bold text-amber-600 text-sm">{evidence.photos || 1}</span>
-                </div>
-                <div>
-                  <span className="text-[9px] text-ink-muted uppercase block font-bold">Sensors</span>
-                  <span className="font-mono font-bold text-indigo-600 text-sm">{evidence.sensor_anomalies || 1}</span>
-                </div>
-              </div>
-
-              {/* Grounded AI Triage Synthesis */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-ink uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-brand" />
-                  <span>AI Triage Synthesis</span>
-                </span>
-                <p className="text-xs text-ink leading-relaxed bg-brand-surface/40 p-3 rounded-card border border-brand/20">
-                  {selectedIncident.gemini_summary}
-                </p>
-              </div>
-
-              {/* Progressive Disclosure: Geospatial Pinpoint Map Accordion */}
-              <div className="border border-slate-200 rounded-card overflow-hidden">
-                <button
-                  onClick={() => setShowMap(!showMap)}
-                  className="w-full flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-ink transition-colors"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-brand" />
-                    <span>Geospatial Pinpoint ({selectedIncident.latitude?.toFixed(3)}, {selectedIncident.longitude?.toFixed(3)})</span>
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-ink-muted transition-transform ${showMap ? 'rotate-180' : ''}`} />
-                </button>
-                {showMap && (
-                  <div className="h-44 relative">
-                    <MapContainer
-                      center={currentCoords}
-                      zoom={13}
-                      style={{ height: '100%', width: '100%' }}
-                      scrollWheelZoom={false}
-                    >
-                      <IncidentMapController coords={currentCoords} />
-                      <TileLayer
-                        attribution='&copy; <a href="https://carto.com/">CartoDB</a>'
-                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                      />
-                      <Marker position={currentCoords} icon={incidentPinIcon}>
-                        <Popup>
-                          <div className="text-xs font-sans">
-                            <b>{selectedIncident.title}</b>
-                            <div>{selectedIncident.location_name}</div>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    </MapContainer>
-                  </div>
-                )}
-              </div>
-
-              {/* Progressive Disclosure: Photo Evidence Accordion */}
-              {selectedIncident.evidence_photo_url && (
-                <div className="border border-slate-200 rounded-card overflow-hidden">
-                  <button
-                    onClick={() => setShowEvidencePhoto(!showEvidencePhoto)}
-                    className="w-full flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-ink transition-colors"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Camera className="w-3.5 h-3.5 text-brand" />
-                      <span>Submitted Photographic Evidence</span>
-                    </span>
-                    <ChevronDown className={`w-4 h-4 text-ink-muted transition-transform ${showEvidencePhoto ? 'rotate-180' : ''}`} />
-                  </button>
-                  {showEvidencePhoto && (
-                    <div className="p-2 bg-slate-900 flex items-center justify-center">
-                      <img 
-                        src={selectedIncident.evidence_photo_url} 
-                        alt="Evidence" 
-                        className="max-h-48 rounded object-cover" 
-                      />
+        {/* COLUMN 2 & 3: INCIDENT INTELLIGENCE WORKSPACE */}
+        {!selectedIncident ? (
+          <div className="lg:col-span-8 card-surface p-12 text-center space-y-3 border-dashed border-2 border-slate-200">
+            <Shield className="w-10 h-10 text-slate-400 mx-auto" />
+            <h3 className="font-bold text-base text-ink">Incident Queue Nominal</h3>
+            <p className="text-xs text-ink-muted max-w-md mx-auto">
+              There are currently no uncontained pollution alerts requiring municipal review. Real citizen reports and physical monitoring triggers will appear in the queue for verification.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* COLUMN 2: INCIDENT INTELLIGENCE WORKSPACE (5 / 12 Cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="card-surface p-4 space-y-3.5">
+                
+                {/* Incident Header Ribbon */}
+                <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <SeverityBadge severity={selectedIncident.severity} size="xs" />
+                      <span className="px-2 py-0.2 rounded-full text-[10px] font-mono font-bold bg-slate-100 uppercase border border-slate-200">
+                        {selectedIncident.status}
+                      </span>
+                      <ProvenanceTag type="inferred" size="xs" />
                     </div>
-                  )}
+                    <h2 className="text-base font-extrabold text-ink leading-tight">
+                      {selectedIncident.title}
+                    </h2>
+                  </div>
+                  <div className="font-mono font-bold text-xs bg-slate-900 text-white px-2.5 py-1 rounded">
+                    Score: {Math.round(selectedIncident.risk_score || 50)}
+                  </div>
                 </div>
-              )}
 
+                {/* Ground Sensor & Environmental Telemetry Cluster */}
+                <div className="p-3 bg-surface rounded-card border border-slate-200 space-y-2 text-xs">
+                  <span className="font-bold text-ink text-[11px] uppercase tracking-wider block">Physical Environmental Context</span>
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="bg-white p-2 rounded border border-slate-200/80">
+                      <span className="text-[10px] text-ink-muted block">Location:</span>
+                      <span className="font-semibold text-ink text-[11px] truncate block">{selectedIncident.location_name || 'Designated Zone'}</span>
+                    </div>
+                    <div className="bg-white p-2 rounded border border-slate-200/80">
+                      <span className="text-[10px] text-ink-muted block">Time Logged:</span>
+                      <span className="font-mono text-slate-700 text-[11px] block">
+                        {selectedIncident.created_at ? new Date(selectedIncident.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gemini Multimodal Vision Synthesis */}
+                <div className="p-3.5 bg-brand-surface/40 rounded-card border border-brand/20 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-ink">
+                    <Sparkles className="w-3.5 h-3.5 text-brand" />
+                    <span>Gemini Multimodal Triage Synthesis</span>
+                  </div>
+                  <p className="text-xs text-ink leading-relaxed">
+                    {selectedIncident.gemini_summary || 'Citizen report recorded with structured analysis.'}
+                  </p>
+                </div>
+
+                {/* Recommended Interventions Checklist */}
+                <div className="space-y-1.5 text-xs">
+                  <span className="font-bold text-ink text-[11px] uppercase tracking-wider block">Recommended Interventions</span>
+                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-card text-[11px] text-amber-900 leading-relaxed whitespace-pre-line">
+                    {selectedIncident.recommended_intervention || '1. Dispatch municipal inspector to verify reported emission.\n2. Cross-reference local monitoring stations.'}
+                  </div>
+                </div>
+
+              </div>
             </div>
-          ) : (
-            <EmptyState
-              title="No incident selected"
-              description="Select an alert from the priority queue to inspect intelligence and response actions."
-            />
-          )}
-        </div>
 
-        {/* ============================================================ */}
-        {/* COLUMN 3: RESPONSE DECISION & ACTION PANEL (Right - 3 / 12 Cols) */}
-        {/* ============================================================ */}
-        <div className="lg:col-span-3 space-y-4">
-          {selectedIncident && (
-            <div className="card-surface p-4 space-y-3.5 border-t-3 border-t-brand">
-              
-              {/* Response Protocol Points */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-bold text-ink uppercase tracking-wider flex items-center gap-1">
-                  <ListChecks className="w-3 h-3 text-brand" />
-                  <span>Recommended Action</span>
-                </span>
-                <div className="text-xs text-ink space-y-1 bg-surface p-2.5 rounded-card border border-slate-200">
-                  {selectedIncident.recommended_intervention?.split('\n').map((step, idx) => (
-                    <div key={idx} className="flex items-start gap-1.5 text-[11px] leading-relaxed">
-                      <span className="font-bold text-brand">{idx + 1}.</span>
-                      <span>{step.replace(/^\d+\.\s*/, '')}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* COLUMN 3: HUMAN GOVERNANCE ACTIONS (3 / 12 Cols) */}
+            <div className="lg:col-span-3 card-surface p-4 space-y-4">
+              <span className="text-xs font-bold text-ink uppercase tracking-wider block border-b border-slate-100 pb-2">
+                Human Governance Actions
+              </span>
 
-              {/* Officer Log Notes Input */}
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold text-ink uppercase tracking-wider">
-                  Officer Decision Log:
-                </label>
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-ink block">Action Notes / Directive:</label>
                 <textarea
-                  value={officerNotes}
-                  onChange={(e) => setOfficerNotes(e.target.value)}
-                  placeholder="Record mitigation orders, inspection results..."
-                  rows={2}
-                  className="input-control text-xs"
+                  value={actionNotes}
+                  onChange={(e) => setActionNotes(e.target.value)}
+                  placeholder="Record field notes or dispatch instructions..."
+                  rows={3}
+                  className="w-full text-xs p-2 rounded-card border border-slate-200 focus:ring-1 focus:ring-brand focus:outline-none"
                 />
               </div>
 
-              {/* Consequential Human-Controlled Buttons */}
               <div className="space-y-2 pt-1">
                 {selectedIncident.status === 'pending' && (
                   <button
@@ -487,16 +386,16 @@ export default function AuthorityDashboard() {
                     disabled={actionLoading}
                     className="btn-primary w-full text-xs py-2 flex items-center justify-center gap-1.5"
                   >
-                    {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Acknowledge Incident</span>
                   </button>
                 )}
 
-                {selectedIncident.status !== 'resolved' && (
+                {selectedIncident.status !== 'escalated' && selectedIncident.status !== 'resolved' && (
                   <button
                     onClick={() => handleAction('dispatch')}
-                    disabled={actionLoading || selectedIncident.status === 'escalated'}
-                    className="w-full px-3 py-2 rounded-full text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                    disabled={actionLoading}
+                    className="btn-secondary w-full text-xs py-2 flex items-center justify-center gap-1.5"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Dispatch Field Unit</span>
@@ -521,7 +420,6 @@ export default function AuthorityDashboard() {
                   </div>
                 )}
 
-                {/* Open Full Dossier Link */}
                 <button
                   onClick={() => navigateTo('alert-details', { alertId: selectedIncident.id })}
                   className="btn-secondary w-full text-xs py-1.5 flex items-center justify-center gap-1"
@@ -531,39 +429,9 @@ export default function AuthorityDashboard() {
                 </button>
               </div>
 
-              {/* Progressive Disclosure: Audit Trail Accordion */}
-              <div className="border border-slate-200 rounded-card overflow-hidden pt-1">
-                <button
-                  onClick={() => setShowAuditTrail(!showAuditTrail)}
-                  className="w-full flex items-center justify-between p-2 bg-slate-50 hover:bg-slate-100 text-[11px] font-semibold text-ink transition-colors"
-                >
-                  <span className="flex items-center gap-1">
-                    <History className="w-3 h-3 text-brand" />
-                    <span>Audit Timeline ({selectedIncident.action_log?.length || 0})</span>
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-ink-muted transition-transform ${showAuditTrail ? 'rotate-180' : ''}`} />
-                </button>
-                {showAuditTrail && (
-                  <div className="p-2 space-y-1.5 max-h-36 overflow-y-auto text-[10px] bg-surface">
-                    {selectedIncident.action_log?.map((log, idx) => (
-                      <div key={idx} className="p-1.5 bg-white rounded border border-slate-200 space-y-0.5">
-                        <div className="font-semibold text-ink capitalize flex justify-between">
-                          <span>{log.action.replace('_', ' ')}</span>
-                          <span className="font-mono text-[9px] text-slate-400">
-                            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        <div className="text-brand font-medium">{log.actor}</div>
-                        <div className="text-ink-muted">{log.notes}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
             </div>
-          )}
-        </div>
+          </>
+        )}
 
       </div>
 

@@ -1,7 +1,8 @@
-from typing import List
-from fastapi import APIRouter
+from typing import List, Optional
+from fastapi import APIRouter, Query
 from backend.models.schemas import DataSourceInfo
 from backend.services.storage_service import storage
+from backend.services.data_service import data_service
 
 router = APIRouter(prefix="/data-sources", tags=["Data Sources & Transparency"])
 
@@ -9,20 +10,20 @@ router = APIRouter(prefix="/data-sources", tags=["Data Sources & Transparency"])
 def get_data_sources():
     return [
         {
-            "name": "Live Air Quality Ground Telemetry",
-            "provider": "OpenAQ API v2",
+            "name": "Live Ground Air Quality Telemetry",
+            "provider": "Open-Meteo & OpenAQ Verified Network",
             "provenance": "observed",
-            "protocol": "REST / JSON (PM2.5, PM10, NO2, SO2, CO, O3)",
-            "update_cadence": "Hourly",
-            "description": "Continuous baseline atmospheric measurements from verified global government monitoring networks.",
+            "protocol": "REST / JSON (PM2.5, PM10, NO2, SO2, CO, O3, US AQI)",
+            "update_cadence": "Hourly Live",
+            "description": "Continuous baseline atmospheric measurements from verified global government and meteorological monitoring networks.",
             "is_live": True
         },
         {
             "name": "Meteorological & Atmospheric Boundary Feeds",
-            "provider": "Open-Meteo API",
+            "provider": "Open-Meteo Public Service",
             "provenance": "observed",
             "protocol": "REST / JSON (Temp, Humidity, Wind Vector, Surface Pressure)",
-            "update_cadence": "Real-Time / 15 min",
+            "update_cadence": "Hourly Live",
             "description": "High-resolution planetary boundary layer wind vectors and thermal stratification for plume dispersion modeling.",
             "is_live": True
         },
@@ -32,40 +33,38 @@ def get_data_sources():
             "provenance": "inferred",
             "protocol": "Multipart / Web Speech Audio / JPEG Imagery",
             "update_cadence": "Real-time Event Driven",
-            "description": "Hyperlocal citizen sightings structured through Gemini multimodal vision and function calling.",
+            "description": "Hyperlocal citizen sightings structured through Gemini multimodal vision and structured analysis.",
             "is_live": True
-        },
-        {
-            "name": "High-Density Micro-Sensor Mesh",
-            "provider": "Seeded Hyperlocal Urban Sensor Grid",
-            "provenance": "simulated",
-            "protocol": "GeoJSON Spatial Point FeatureCollection",
-            "update_cadence": "Simulated 15-min intervals",
-            "description": "Realistic micro-sensor distribution across industrial clusters and residential boundaries in BRICS cities.",
-            "is_live": False
-        },
-        {
-            "name": "Satellite Aerosol Optical Depth (AOD) Proxy",
-            "provider": "Synthetic Sentinel-5P / MODIS Aerosol Proxy Grid",
-            "provenance": "simulated",
-            "protocol": "GeoJSON Grid / Continuous Surface Matrix",
-            "update_cadence": "Simulated Daily Orbit",
-            "description": "Regional background aerosol loading and optical depth indicators benchmarked for demonstration.",
-            "is_live": False
-        },
-        {
-            "name": "Trans-Boundary Regional Drift Models",
-            "provider": "Atmospheric Dispersion Corridor Simulator",
-            "provenance": "predicted",
-            "protocol": "GeoJSON Plume Vector Polygons",
-            "update_cadence": "Continuous Scenario Engine",
-            "description": "Cross-border wind transport modeling and bilateral notification corridors for BRICS sustainability coordination.",
-            "is_live": False
         }
     ]
 
+@router.get("/air-quality")
+def get_air_quality(
+    lat: float = Query(28.6139, description="Latitude"),
+    lon: float = Query(77.2090, description="Longitude"),
+    force_refresh: bool = Query(False, description="Bypass cache")
+):
+    """
+    Fetch verified live air quality measurements from public station APIs.
+    """
+    return data_service.get_air_quality(lat, lon, force_refresh=force_refresh)
+
+@router.get("/weather")
+def get_weather(
+    lat: float = Query(28.6139, description="Latitude"),
+    lon: float = Query(77.2090, description="Longitude"),
+    force_refresh: bool = Query(False, description="Bypass cache")
+):
+    """
+    Fetch verified live meteorological observations.
+    """
+    return data_service.get_weather(lat, lon, force_refresh=force_refresh)
+
 @router.get("/sensors")
-def get_sensors(country: str = None):
+def get_sensors(country: Optional[str] = None):
+    """
+    Returns registered public monitoring stations. Starts empty unless real sensors are configured.
+    """
     return storage.get_sensors(country=country)
 
 @router.get("/satellite")

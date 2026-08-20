@@ -52,7 +52,7 @@ export default function PredictionTimeline() {
             <ProvenanceTag type="predicted" size="xs" />
           </div>
           <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-            {t.predSubtitle || 'Physics-grounded XGBoost atmospheric regressor evaluated against planetary boundary layer weather, OpenAQ baseline telemetry, and citizen sighting velocity.'}
+            {t.predSubtitle || 'Physics-grounded atmospheric risk predictor evaluated against planetary boundary layer weather, OpenAQ baseline telemetry, and citizen sighting velocity.'}
           </p>
         </div>
 
@@ -68,9 +68,13 @@ export default function PredictionTimeline() {
       {/* Main Prediction Content */}
       {loading ? (
         <Loader text="Computing 24-hour meteorological atmospheric dispersion..." />
-      ) : !predictionData ? (
-        <div className="card-surface p-8 text-center text-ink-muted text-sm">
-          Failed to load forecast model data.
+      ) : !predictionData || !predictionData.forecast || predictionData.forecast.length === 0 ? (
+        <div className="card-surface p-12 text-center space-y-3 border-dashed border-2 border-slate-200">
+          <TrendingUp className="w-10 h-10 text-slate-400 mx-auto" />
+          <h3 className="font-bold text-base text-ink">Insufficient Data for 24-Hour Atmospheric Prediction</h3>
+          <p className="text-xs text-ink-muted max-w-md mx-auto">
+            A baseline of continuous telemetry or verified citizen incident reports in this airshed is required to calculate dynamic boundary layer dispersion and spike probabilities.
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -85,7 +89,7 @@ export default function PredictionTimeline() {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="font-semibold text-ink uppercase tracking-wider text-[11px]">Model Architecture:</span>
                   <span className="font-mono text-brand font-bold text-xs bg-brand/10 px-2 py-0.5 rounded">
-                    {predictionData.model_metadata?.model_type || 'Physics-Grounded XGBoost Atmospheric Regressor'}
+                    {predictionData.model_metadata?.model_type || 'Physics-Grounded Atmospheric Risk Predictor'}
                   </span>
                 </div>
                 <p className="text-ink-muted leading-relaxed text-[11px]">
@@ -153,7 +157,7 @@ export default function PredictionTimeline() {
                   <span>Prediction Engine</span>
                 </span>
                 <p className="text-ink-muted text-[11px]">
-                  Offline-trained XGBoost Regressor script with dynamic stagnation weighting.
+                  Physics-grounded dispersion regression model with dynamic stagnation and boundary layer weighting.
                 </p>
               </div>
             </div>

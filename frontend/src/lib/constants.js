@@ -17,7 +17,7 @@ export const SEVERITY_CONFIG = {
 export const PROVENANCE_CONFIG = {
   observed: { label: 'Observed', icon: 'Radio', desc: 'Direct live station reading (OpenAQ / Open-Meteo)', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
   inferred: { label: 'Inferred', icon: 'Sparkles', desc: 'Structured via Gemini Multimodal Analysis', badge: 'bg-indigo-50 text-indigo-800 border-indigo-200' },
-  predicted: { label: 'Predicted', icon: 'TrendingUp', desc: 'Forecasted by XGBoost Atmospheric Model', badge: 'bg-amber-50 text-amber-800 border-amber-200' },
+  predicted: { label: 'Predicted', icon: 'TrendingUp', desc: 'Forecasted by Physics-Grounded Atmospheric Model', badge: 'bg-amber-50 text-amber-800 border-amber-200' },
   simulated: { label: 'Simulated', icon: 'Cpu', desc: 'Synthetic Benchmark / Demonstration Data', badge: 'bg-slate-100 text-slate-700 border-slate-300' }
 };
 

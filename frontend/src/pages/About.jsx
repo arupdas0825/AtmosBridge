@@ -56,7 +56,7 @@ export default function About() {
               <span>1. Zero Sensor Invention (Anti-Hallucination)</span>
             </div>
             <p className="text-xs text-ink-muted leading-relaxed">
-              Gemini is structurally prohibited from synthesizing or guessing numerical sensor values. All environmental figures are fetched strictly through backend tool calls (<code className="font-mono text-[11px] bg-surface px-1 py-0.5 rounded">get_local_air_quality</code>, <code className="font-mono text-[11px] bg-surface px-1 py-0.5 rounded">get_weather</code>) or returned as null.
+              Gemini is structurally prompted and constrained from synthesizing or guessing numerical sensor values. All environmental figures are fetched strictly through grounded backend telemetry feeds (OpenAQ, Open-Meteo) or returned as null.
             </p>
           </div>
 
@@ -108,7 +108,7 @@ export default function About() {
           </div>
           <div className="flex items-start gap-2.5 bg-surface p-3 rounded-card border border-slate-200/80">
             <ProvenanceTag type="predicted" size="sm" />
-            <span className="text-ink-muted text-[11px]">6h/12h/24h atmospheric spike probabilities from trained XGBoost models.</span>
+            <span className="text-ink-muted text-[11px]">6h/12h/24h atmospheric spike probabilities from physics-grounded dispersion models.</span>
           </div>
           <div className="flex items-start gap-2.5 bg-surface p-3 rounded-card border border-slate-200/80">
             <ProvenanceTag type="simulated" size="sm" />

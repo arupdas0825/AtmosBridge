@@ -42,13 +42,18 @@ export default function AlertDetails() {
 
   useEffect(() => {
     async function loadAlert() {
-      if (!activeAlertId) return;
+      if (!activeAlertId) {
+        setLoading(false);
+        setAlert(null);
+        return;
+      }
       setLoading(true);
       try {
         const data = await getAlertById(activeAlertId);
         setAlert(data);
       } catch (err) {
         console.error(err);
+        setAlert(null);
       } finally {
         setLoading(false);
       }
@@ -91,9 +96,9 @@ export default function AlertDetails() {
   }
 
   const evidence = alert.evidence_count || {
-    citizen_reports: 6,
-    photos: 1,
-    sensor_anomalies: 1
+    citizen_reports: 0,
+    photos: 0,
+    sensor_anomalies: 0
   };
 
   const hasCoords = alert.latitude && alert.longitude;

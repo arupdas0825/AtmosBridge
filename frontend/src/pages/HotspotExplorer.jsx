@@ -156,10 +156,15 @@ export default function HotspotExplorer() {
         <Loader text="Loading active hotspot catalog..." />
       ) : filteredHotspots.length === 0 ? (
         <EmptyState
-          title="No hotspots matched your query"
-          description="Try selecting 'All Airsheds' or adjusting your search keywords."
-          actionText="Reset Filters"
-          onAction={() => { setSearchQuery(''); setSeverityFilter('all'); setActiveCountry('all'); }}
+          title={hotspots.length === 0 ? "No active pollution hotspots detected" : "No hotspots matched your query"}
+          description={hotspots.length === 0 
+            ? "All monitored regional airsheds are currently nominal. Real citizen reports and physical monitoring triggers will appear here." 
+            : "Try selecting 'All Airsheds' or adjusting your search filters."}
+          actionText={hotspots.length === 0 ? "Report Pollution Sighting" : "Reset Filters"}
+          onAction={() => { 
+            if (hotspots.length === 0) navigateTo('report');
+            else { setSearchQuery(''); setSeverityFilter('all'); setActiveCountry('all'); }
+          }}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

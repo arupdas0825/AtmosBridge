@@ -17,7 +17,7 @@ In accordance with the project's **Honesty Over Polish** principle (see [`docs/r
 ---
 
 ## 3. Machine Learning & Forecasting
-- **Spike Predictor**: The 6h/12h/24h forecasting engine utilizes an XGBoost regressor trained on historical AQI and meteorological patterns, paired with a deterministic atmospheric stagnation heuristic fallback.
+- **Spike Predictor**: The 6h/12h/24h forecasting engine utilizes a physics-grounded atmospheric dispersion regressor evaluating boundary layer ventilation, thermal inversion, and citizen sighting velocity.
 - **Local Micro-Meteorology**: Complex urban canyon effects and building wake turbulence are simplified to macro wind-vector and boundary-layer physics.
 
 ---
