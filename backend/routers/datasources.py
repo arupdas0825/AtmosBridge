@@ -10,18 +10,18 @@ router = APIRouter(prefix="/data-sources", tags=["Data Sources & Transparency"])
 def get_data_sources():
     return [
         {
-            "name": "Live Ground Air Quality Telemetry",
-            "provider": "Open-Meteo & OpenAQ Verified Network",
-            "provenance": "observed",
+            "name": "Public Air Quality Reanalysis Telemetry",
+            "provider": "Open-Meteo Air Quality & Copernicus Atmosphere (CAMS)",
+            "provenance": "modelled",
             "protocol": "REST / JSON (PM2.5, PM10, NO2, SO2, CO, O3, US AQI)",
             "update_cadence": "Hourly Live",
-            "description": "Continuous baseline atmospheric measurements from verified global government and meteorological monitoring networks.",
+            "description": "Continuous baseline atmospheric measurements from verified global government and Copernicus meteorological reanalysis models.",
             "is_live": True
         },
         {
             "name": "Meteorological & Atmospheric Boundary Feeds",
             "provider": "Open-Meteo Public Service",
-            "provenance": "observed",
+            "provenance": "modelled",
             "protocol": "REST / JSON (Temp, Humidity, Wind Vector, Surface Pressure)",
             "update_cadence": "Hourly Live",
             "description": "High-resolution planetary boundary layer wind vectors and thermal stratification for plume dispersion modeling.",

@@ -42,26 +42,28 @@ class DataService:
                     "wind_direction": current.get("wind_direction_10m"),
                     "surface_pressure": current.get("surface_pressure"),
                     "timestamp": current.get("time"),
-                    "provenance": "observed",
-                    "source": "Open-Meteo Public Meteorological Service"
+                    "provenance": "modelled",
+                    "source": "Open-Meteo Meteorological Reanalysis"
                 }
                 self._set_cached(cache_key, result)
                 return result
         except Exception:
             pass
 
-        # If live API is unreachable, return unavailable state (NEVER invent fake weather values)
+        # If API is unreachable, return clean unavailable state
         unavailable = {
             "is_live": False,
             "status": "unavailable",
             "message": "Live meteorological data unavailable for this location",
-            "provenance": "observed"
+            "provenance": "modelled"
         }
         return unavailable
 
     def get_air_quality(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
         """
-        Fetch verified live air quality telemetry from Open-Meteo / Copernicus Atmospheric Service.
+        Fetch verified air quality telemetry.
+        - Ground Station feeds (OpenAQ) -> Provenance: "observed"
+        - Atmospheric Transport / Reanalysis (Open-Meteo / Copernicus CAMS) -> Provenance: "modelled"
         Returns unavailable state if live data is not accessible.
         """
         cache_key = f"aqi_{round(lat, 3)}_{round(lon, 3)}"
@@ -70,7 +72,7 @@ class DataService:
             if cached:
                 return cached
 
-        # Check OpenAQ API v3 if API key is present
+        # 1. Check OpenAQ API v3 for direct ground-station observations if API key is present
         if settings.OPENAQ_API_KEY:
             try:
                 headers = {"X-API-Key": settings.OPENAQ_API_KEY}
@@ -81,7 +83,6 @@ class DataService:
                     results = data.get("results", [])
                     if results and len(results) > 0:
                         loc = results[0]
-                        # Fetch latest measurements for location
                         loc_id = loc.get("id")
                         if loc_id:
                             m_resp = requests.get(f"https://api.openaq.org/v3/locations/{loc_id}/latest", headers=headers, timeout=5)
@@ -93,24 +94,30 @@ class DataService:
                                     val = m.get("value")
                                     unit = m.get("parameter", {}).get("units", "µg/m³")
                                     if param and val is not None:
-                                        pollutants[param] = {"value": round(val, 1), "unit": unit, "provenance": "observed"}
+                                        pollutants[param] = {
+                                            "value": round(val, 1),
+                                            "unit": unit,
+                                            "provenance": "observed"
+                                        }
                                 
                                 if pollutants:
                                     res = {
                                         "is_live": True,
                                         "status": "active",
-                                        "location_name": loc.get("name", "Verified OpenAQ Station"),
+                                        "location_name": loc.get("name", "Verified Ground Monitoring Station"),
                                         "pollutants": pollutants,
                                         "timestamp": loc.get("datetimeLast", {}).get("utc"),
                                         "provenance": "observed",
-                                        "source": "OpenAQ Live Monitoring Network"
+                                        "data_type": "Observed (Physical Ground Station)",
+                                        "source": "OpenAQ Monitoring Station",
+                                        "aqi_type": "calculated"
                                     }
                                     self._set_cached(cache_key, res)
                                     return res
             except Exception:
                 pass
 
-        # Primary Live Source: Open-Meteo Air Quality & CAMS Telemetry
+        # 2. Public Source: Open-Meteo Air Quality API (Atmospheric Transport / CAMS Reanalysis Model)
         try:
             url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&current=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi,european_aqi"
             resp = requests.get(url, timeout=6)
@@ -123,37 +130,37 @@ class DataService:
                     pollutants["pm25"] = {
                         "value": round(float(current["pm2_5"]), 1),
                         "unit": "µg/m³",
-                        "provenance": "observed"
+                        "provenance": "modelled"
                     }
                 if current.get("pm10") is not None:
                     pollutants["pm10"] = {
                         "value": round(float(current["pm10"]), 1),
                         "unit": "µg/m³",
-                        "provenance": "observed"
+                        "provenance": "modelled"
                     }
                 if current.get("nitrogen_dioxide") is not None:
                     pollutants["no2"] = {
                         "value": round(float(current["nitrogen_dioxide"]), 1),
                         "unit": "µg/m³",
-                        "provenance": "observed"
+                        "provenance": "modelled"
                     }
                 if current.get("sulphur_dioxide") is not None:
                     pollutants["so2"] = {
                         "value": round(float(current["sulphur_dioxide"]), 1),
                         "unit": "µg/m³",
-                        "provenance": "observed"
+                        "provenance": "modelled"
                     }
                 if current.get("carbon_monoxide") is not None:
                     pollutants["co"] = {
                         "value": round(float(current["carbon_monoxide"]), 1),
                         "unit": "µg/m³",
-                        "provenance": "observed"
+                        "provenance": "modelled"
                     }
                 if current.get("ozone") is not None:
                     pollutants["o3"] = {
                         "value": round(float(current["ozone"]), 1),
                         "unit": "µg/m³",
-                        "provenance": "observed"
+                        "provenance": "modelled"
                     }
 
                 us_aqi = current.get("us_aqi")
@@ -167,23 +174,26 @@ class DataService:
                     "longitude": lon,
                     "us_aqi": us_aqi,
                     "european_aqi": european_aqi,
+                    "aqi_type": "reported" if us_aqi is not None else "calculated",
                     "pollutants": pollutants,
                     "timestamp": timestamp,
-                    "provenance": "observed",
-                    "source": "Open-Meteo / Copernicus Atmospheric Service"
+                    "provenance": "modelled",
+                    "data_type": "Modelled (Atmospheric Chemical Transport)",
+                    "source": "Open-Meteo Air Quality",
+                    "atmospheric_source": "Copernicus Atmosphere"
                 }
                 self._set_cached(cache_key, result)
                 return result
         except Exception:
             pass
 
-        # If live telemetry is unavailable, return clean unavailable response (NEVER invent fake numbers)
+        # If data is unavailable, return clean unavailable response with zero fake numbers
         unavailable = {
             "is_live": False,
             "status": "unavailable",
-            "message": "No current observations available for this location",
+            "message": "No verified environmental data is currently available for this location.",
             "pollutants": {},
-            "provenance": "observed"
+            "provenance": "modelled"
         }
         return unavailable
 

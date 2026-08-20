@@ -63,22 +63,22 @@ export async function getLiveAirQuality(lat = 28.6139, lon = 77.2090, forceRefre
       const pollutants = {};
 
       if (current.pm2_5 !== undefined && current.pm2_5 !== null) {
-        pollutants.pm25 = { value: Math.round(current.pm2_5 * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+        pollutants.pm25 = { value: Math.round(current.pm2_5 * 10) / 10, unit: 'µg/m³', provenance: 'modelled' };
       }
       if (current.pm10 !== undefined && current.pm10 !== null) {
-        pollutants.pm10 = { value: Math.round(current.pm10 * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+        pollutants.pm10 = { value: Math.round(current.pm10 * 10) / 10, unit: 'µg/m³', provenance: 'modelled' };
       }
       if (current.nitrogen_dioxide !== undefined && current.nitrogen_dioxide !== null) {
-        pollutants.no2 = { value: Math.round(current.nitrogen_dioxide * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+        pollutants.no2 = { value: Math.round(current.nitrogen_dioxide * 10) / 10, unit: 'µg/m³', provenance: 'modelled' };
       }
       if (current.sulphur_dioxide !== undefined && current.sulphur_dioxide !== null) {
-        pollutants.so2 = { value: Math.round(current.sulphur_dioxide * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+        pollutants.so2 = { value: Math.round(current.sulphur_dioxide * 10) / 10, unit: 'µg/m³', provenance: 'modelled' };
       }
       if (current.carbon_monoxide !== undefined && current.carbon_monoxide !== null) {
-        pollutants.co = { value: Math.round(current.carbon_monoxide * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+        pollutants.co = { value: Math.round(current.carbon_monoxide * 10) / 10, unit: 'µg/m³', provenance: 'modelled' };
       }
       if (current.ozone !== undefined && current.ozone !== null) {
-        pollutants.o3 = { value: Math.round(current.ozone * 10) / 10, unit: 'µg/m³', provenance: 'observed' };
+        pollutants.o3 = { value: Math.round(current.ozone * 10) / 10, unit: 'µg/m³', provenance: 'modelled' };
       }
 
       return {
@@ -88,10 +88,13 @@ export async function getLiveAirQuality(lat = 28.6139, lon = 77.2090, forceRefre
         longitude: lon,
         us_aqi: current.us_aqi,
         european_aqi: current.european_aqi,
+        aqi_type: current.us_aqi !== undefined && current.us_aqi !== null ? 'reported' : 'calculated',
         pollutants,
         timestamp: current.time,
-        provenance: 'observed',
-        source: 'Open-Meteo / Copernicus Atmospheric Service'
+        provenance: 'modelled',
+        data_type: 'Modelled (Atmospheric Chemical Transport)',
+        source: 'Open-Meteo Air Quality',
+        atmospheric_source: 'Copernicus Atmosphere'
       };
     }
   } catch (err) {
@@ -102,9 +105,9 @@ export async function getLiveAirQuality(lat = 28.6139, lon = 77.2090, forceRefre
   return {
     is_live: false,
     status: 'unavailable',
-    message: 'No current observations available for this location',
+    message: 'No verified environmental data is currently available for this location.',
     pollutants: {},
-    provenance: 'observed'
+    provenance: 'modelled'
   };
 }
 
