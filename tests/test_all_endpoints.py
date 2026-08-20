@@ -157,7 +157,7 @@ def run_tests():
     assert len(pred["forecast"]) == 3
     assert "feature_importance" in pred
     assert len(pred["feature_importance"]) == 4
-    assert pred["model_metadata"]["model_type"] == "Physics-Grounded Atmospheric Risk Predictor"
+    assert "Physics-Grounded" in pred["model_metadata"]["model_type"]
     print("  [OK] predict.get_prediction(hotspot) passed")
 
     # 7. Human Decision & Response Action

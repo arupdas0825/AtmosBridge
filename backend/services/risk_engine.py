@@ -31,9 +31,8 @@ class RiskEngine:
         
         gemini_severity = gemini_analysis.get("severity", 3)
         confidence = gemini_analysis.get("confidence", 0.85)
-        wind_speed = weather_data.get("wind_speed") if weather_data.get("is_live") else 8.0
-        if wind_speed is None:
-            wind_speed = 8.0
+        live_wind = weather_data.get("wind_speed") if weather_data.get("is_live") else None
+        wind_speed = live_wind if live_wind is not None else 10.0
         
         # 3. Calculate Transparent Hotspot Risk Score (0-100)
         # Component weights:
@@ -42,8 +41,8 @@ class RiskEngine:
         # - Meteorological boundary stagnation (20%)
         # - Sighting classification confidence (15%)
         c_severity = (gemini_severity / 4.0) * 35.0
-        c_pm25 = min(30.0, (pm25_val / 300.0) * 30.0) if pm25_val > 0 else 15.0
-        stagnation = max(0.0, (15.0 - min(wind_speed, 15.0)) / 15.0)
+        c_pm25 = min(30.0, (pm25_val / 300.0) * 30.0) if pm25_val > 0 else 0.0
+        stagnation = max(0.0, (15.0 - min(wind_speed, 15.0)) / 15.0) if live_wind is not None else 0.3
         c_wind = stagnation * 20.0
         c_conf = confidence * 15.0
         

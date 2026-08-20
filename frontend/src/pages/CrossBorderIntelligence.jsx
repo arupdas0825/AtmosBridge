@@ -109,12 +109,15 @@ export default function CrossBorderIntelligence() {
               Cross-Border Atmospheric Transport Intelligence
             </h1>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
-            {scenarios.length > 0 ? 'ACTIVE CORRIDORS' : 'MONITORING ACTIVE'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200">
+              Simulated Prototype Scenarios
+            </span>
+            <ProvenanceTag type="simulated" size="xs" />
+          </div>
         </div>
         <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-          Evaluate potential pollution transport pathways across regional and sovereign boundaries using meteorological wind vectors and boundary layer drift models.
+          Evaluate potential atmospheric transport pathways across regional airshed corridors using meteorological wind vectors and dispersion models.
         </p>
       </div>
 

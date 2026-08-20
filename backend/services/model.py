@@ -67,17 +67,33 @@ class SpikePredictor:
 
     def predict(
         self,
-        base_pm25: float = 140.0,
-        temperature: float = 28.0,
-        humidity: float = 65.0,
-        wind_speed: float = 6.0,
-        wind_direction: float = 300.0,
-        report_count: int = 5,
-        satellite_aod: float = 0.65
+        base_pm25: Optional[float] = None,
+        temperature: Optional[float] = None,
+        humidity: Optional[float] = None,
+        wind_speed: Optional[float] = None,
+        wind_direction: Optional[float] = None,
+        report_count: int = 0,
+        satellite_aod: Optional[float] = None
     ) -> Dict[str, Any]:
         """
         Generate 6h, 12h, and 24h spike predictions and feature importance analysis.
+        Returns insufficient_data state if required observational inputs are missing.
         """
+        if base_pm25 is None or temperature is None or humidity is None or wind_speed is None:
+            return {
+                "forecast": [],
+                "feature_importance": [],
+                "model_metadata": {
+                    "model_type": "Physics-Grounded Atmospheric Risk Predictor",
+                    "status": "insufficient_data",
+                    "message": "Insufficient verified observational telemetry to compute 24h dispersion trajectory.",
+                    "provenance": "predicted"
+                }
+            }
+
+        wind_direction = wind_direction if wind_direction is not None else 0.0
+        satellite_aod = satellite_aod if satellite_aod is not None else 0.5
+
         # Feature calculations
         # Low wind (< 10 km/h) causes particulate accumulation
         stagnation_factor = max(0.2, (15.0 - min(wind_speed, 15.0)) / 15.0)

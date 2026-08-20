@@ -109,6 +109,7 @@ Please evaluate the severity of this pollution event, extract visual/textual evi
                                 validated = GeminiAnalysisResult(**parsed)
                                 res_dict = validated.model_dump()
                                 res_dict["is_demo_fallback"] = False
+                                res_dict["analysis_status"] = "AI analysis verified"
                                 return res_dict
                 except Exception as e:
                     continue
@@ -195,7 +196,8 @@ Please evaluate the severity of this pollution event, extract visual/textual evi
             "visual_evidence": evidence,
             "recommended_verification": verification,
             "explanation": explanation,
-            "is_demo_fallback": True
+            "is_demo_fallback": True,
+            "analysis_status": "Simulated prototype analysis"
         }
 
 gemini_service = GeminiService()

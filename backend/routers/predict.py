@@ -45,34 +45,35 @@ def get_prediction(
     if base_pm25 is None and lat is not None and lon is not None:
         aq = data_service.get_air_quality(lat, lon)
         if aq.get("is_live") and "pm25" in aq.get("pollutants", {}):
-            base_pm25 = aq["pollutants"]["pm25"]["value"]
+            base_pm25 = aq["pollutants"]["pm25"].get("value")
         
         wea = data_service.get_weather(lat, lon)
         if wea.get("is_live"):
-            temp = wea.get("temperature", 25.0)
-            humidity = wea.get("humidity", 50.0)
-            wind_spd = wea.get("wind_speed", 5.0)
-            wind_dir = wea.get("wind_direction", 0.0)
+            temp = wea.get("temperature")
+            humidity = wea.get("humidity")
+            wind_spd = wea.get("wind_speed")
+            wind_dir = wea.get("wind_direction")
 
-    # If observational baseline is present, calculate prediction
-    if base_pm25 is not None:
+    # Generate prediction ONLY if baseline observational telemetry exists
+    if base_pm25 is not None and temp is not None and humidity is not None and wind_spd is not None:
         prediction_result = predictor.predict(
             base_pm25=base_pm25,
-            temperature=temp or 25.0,
-            humidity=humidity or 50.0,
-            wind_speed=wind_spd or 5.0,
+            temperature=temp,
+            humidity=humidity,
+            wind_speed=wind_spd,
             wind_direction=wind_dir or 0.0,
             report_count=report_count,
             satellite_aod=satellite_aod
         )
-        return {
-            "hotspot_id": hotspot_id,
-            "latitude": lat or 0.0,
-            "longitude": lon or 0.0,
-            "forecast": prediction_result["forecast"],
-            "feature_importance": prediction_result["feature_importance"],
-            "model_metadata": prediction_result["model_metadata"]
-        }
+        if prediction_result.get("model_metadata", {}).get("status") != "insufficient_data":
+            return {
+                "hotspot_id": hotspot_id,
+                "latitude": lat or 0.0,
+                "longitude": lon or 0.0,
+                "forecast": prediction_result["forecast"],
+                "feature_importance": prediction_result["feature_importance"],
+                "model_metadata": prediction_result["model_metadata"]
+            }
 
     # If insufficient real observational data exists, return empty forecast
     return {
