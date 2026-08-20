@@ -22,16 +22,17 @@
 - [x] **No secrets committed:** Pre-commit scanner & security check script verified (93 files, 0 secrets).
 - [x] **Git history clean:** History search (`git log -S "AIza"`) confirmed zero active hardcoded keys.
 - [x] **.env excluded:** Excluded via `.gitignore`.
-- [x] **.env.example present:** Safe placeholders only (`GEMINI_API_KEY=`, `VITE_GOOGLE_MAPS_API_KEY=`).
+- [x] **.env.example present:** Safe placeholders only (`GEMINI_API_KEY=`, `OPENAQ_API_KEY=`, `ALLOWED_ORIGINS=`).
 - [x] **Local setup instructions:** Clear Python & Node.js quickstart steps tested and verified.
 - [x] **Deployment instructions:** Documented Vercel & Cloud Run container configurations.
+- [x] **Dependencies complete:** `requirements.txt` (root and `backend/`) now include `numpy`, `pandas`, and `xgboost` so `scripts/train_model.py` and the live prediction service run on a fresh clone without a missing-module error.
 
 ### 2. Prototype Functionality
 - [x] **Live prototype URL:** [https://atmosbridgeai.vercel.app/](https://atmosbridgeai.vercel.app/)
 - [x] **Citizen report flow:** Photo upload, location picker, text description, and voice transcript input.
 - [x] **Gemini multimodal analysis:** Visual plume evaluation, severity scoring (1–4), visual evidence extraction, and operational verification steps.
 - [x] **Hotspots explorer:** Spatial clustering of citizen sightings with OpenAQ sensor readings and trend badges.
-- [x] **Prediction engine:** 6h/12h/24h atmospheric spike timeline with confidence interval bands and feature importance.
+- [x] **Prediction engine:** 6h/12h/24h atmospheric spike timeline with confidence interval bands and feature importance. The trained XGBoost model (`backend/models/spike_predictor.json`, produced by `scripts/train_model.py`) is now loaded by `backend/services/model.py` and anchors the physics-grounded forecast when present; the service falls back cleanly to the pure physics model if the file or `xgboost` package isn't available.
 - [x] **Cross-border intelligence:** Trans-boundary atmospheric drift model with wind vector cards and bilateral advisories.
 - [x] **Authority workflow:** Real-time alert triage queue with Acknowledge/Escalate human-in-the-loop action buttons.
 - [x] **Mobile experience:** Responsive layout featuring a floating liquid-glass bottom navigation dock.
