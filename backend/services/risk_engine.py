@@ -12,32 +12,37 @@ class RiskEngine:
         gemini_analysis: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Fuses citizen report, Gemini analysis, live environmental feeds, and historical baselines
-        into a scored Hotspot and Authority Alert if warranted.
+        Prototype Hotspot Detection Engine:
+        Correlates citizen reports, Gemini multimodal analysis, verified public air quality telemetry,
+        and meteorological dispersion factors into a scored Hotspot and Authority Alert if warranted.
         """
         lat = report.get("latitude", 28.6139)
         lon = report.get("longitude", 77.2090)
         location_name = report.get("location_name", "Hyperlocal Urban Zone")
         
-        # 1. Fetch live or cached ground data
+        # 1. Fetch verified public air quality & meteorological feeds
         aqi_data = data_service.get_air_quality(lat, lon)
         weather_data = data_service.get_weather(lat, lon)
         
-        # 2. Extract parameters
-        pm25_val = aqi_data.get("pm25", {}).get("value", 135.0)
-        pm10_val = aqi_data.get("pm10", {}).get("value", 210.0)
+        # 2. Extract verified parameters (zero invented measurements)
+        pollutants = aqi_data.get("pollutants", {})
+        pm25_obj = pollutants.get("pm25")
+        pm25_val = pm25_obj.get("value") if pm25_obj else 0.0
+        
         gemini_severity = gemini_analysis.get("severity", 3)
         confidence = gemini_analysis.get("confidence", 0.85)
-        wind_speed = weather_data.get("wind_speed", 8.0)
+        wind_speed = weather_data.get("wind_speed") if weather_data.get("is_live") else 8.0
+        if wind_speed is None:
+            wind_speed = 8.0
         
-        # 3. Calculate Risk Score (0-100)
+        # 3. Calculate Transparent Hotspot Risk Score (0-100)
         # Component weights:
-        # - Gemini visual severity (35%)
-        # - Ambient PM2.5 level (30%)
-        # - Meteorological stagnation (20%)
-        # - Model confidence (15%)
+        # - Multimodal visual severity from citizen report (35%)
+        # - Ambient PM2.5 baseline elevation (30%)
+        # - Meteorological boundary stagnation (20%)
+        # - Sighting classification confidence (15%)
         c_severity = (gemini_severity / 4.0) * 35.0
-        c_pm25 = min(30.0, (pm25_val / 300.0) * 30.0)
+        c_pm25 = min(30.0, (pm25_val / 300.0) * 30.0) if pm25_val > 0 else 15.0
         stagnation = max(0.0, (15.0 - min(wind_speed, 15.0)) / 15.0)
         c_wind = stagnation * 20.0
         c_conf = confidence * 15.0
@@ -59,11 +64,11 @@ class RiskEngine:
             severity_label = "safe"
             num_severity = 1
 
-        # Determine country from coordinates or fallback
+        # Determine country from coordinates
         country = self._infer_country(lat, lon)
         city = self._infer_city(lat, lon, location_name)
         
-        # Affected population estimate (based on urban density archetype)
+        # Affected population estimate based on urban density heuristic
         pop_density_factor = 12000  # people / km2
         radius_km = 1.0 + (num_severity * 0.75)
         affected_pop = int(3.14159 * (radius_km ** 2) * pop_density_factor * (risk_score / 100.0))
@@ -71,19 +76,19 @@ class RiskEngine:
         # Check cross-border proximity (within 100km of borders)
         is_cross_border = self._check_cross_border_proximity(lat, lon)
 
-        # 4. Check for existing nearby hotspot (within ~2km)
+        # 4. Check for existing nearby hotspot (within ~3km spatial cluster)
         existing_hotspots = storage.get_hotspots()
         matched_hotspot = None
         for h in existing_hotspots:
             dist_sq = (h.get("latitude", 0) - lat) ** 2 + (h.get("longitude", 0) - lon) ** 2
-            if dist_sq < 0.001:  # approx 3km
+            if dist_sq < 0.001:  # approx 3km cluster
                 matched_hotspot = h
                 break
 
         now_iso = datetime.now(timezone.utc).isoformat()
 
         if matched_hotspot:
-            # Update existing hotspot
+            # Update existing hotspot with new correlated evidence
             matched_hotspot["reports_count"] = matched_hotspot.get("reports_count", 1) + 1
             matched_hotspot["risk_score"] = max(matched_hotspot.get("risk_score", 0), risk_score)
             matched_hotspot["severity"] = max(matched_hotspot.get("severity", 1), num_severity)
@@ -92,15 +97,20 @@ class RiskEngine:
             matched_hotspot["summary"] = gemini_analysis.get("explanation", matched_hotspot.get("summary"))
             if report.get("id") not in matched_hotspot.get("contributing_report_ids", []):
                 matched_hotspot.setdefault("contributing_report_ids", []).append(report.get("id"))
+            if pollutants:
+                matched_hotspot["pollutants"] = pollutants
+            if weather_data.get("is_live"):
+                matched_hotspot["weather"] = weather_data
             
             saved_hotspot = storage.save_hotspot(matched_hotspot)
             hotspot_id = saved_hotspot["id"]
         else:
-            # Create new hotspot
+            # Create new correlated hotspot
             hotspot_id = f"hotspot_{country.lower()[:3]}_{uuid.uuid4().hex[:6]}"
             new_hotspot = {
                 "id": hotspot_id,
-                "title": f"{gemini_analysis.get('event_type', 'Pollution').replace('_', ' ').title()} — {location_name}",
+                "title": f"{gemini_analysis.get('event_type', 'Pollution').replace('_', ' ').title()} Event — {location_name}",
+                "event_type": gemini_analysis.get('event_type', 'unclassified_emission'),
                 "country": country,
                 "city": city,
                 "latitude": round(lat, 4),
@@ -108,23 +118,17 @@ class RiskEngine:
                 "severity": num_severity,
                 "severity_label": severity_label,
                 "risk_score": risk_score,
-                "status": "active" if num_severity >= 3 else "monitoring",
-                "pollutants": aqi_data if "pm25" in aqi_data else {
-                    "pm25": {"value": pm25_val, "unit": "µg/m³", "provenance": "observed"},
-                    "pm10": {"value": pm10_val, "unit": "µg/m³", "provenance": "observed"},
-                    "no2": {"value": 52.0, "unit": "ppb", "provenance": "simulated"}
-                },
-                "weather": weather_data,
+                "status": "active" if num_severity >= 3 else "investigating",
+                "pollutants": pollutants,
+                "weather": weather_data if weather_data.get("is_live") else None,
                 "affected_population_estimate": affected_pop,
                 "cross_border_risk": is_cross_border,
                 "reports_count": 1,
+                "first_detected": now_iso,
                 "last_updated": now_iso,
-                "summary": gemini_analysis.get("explanation", "Acute localized pollution sighting."),
-                "satellite_aerosol_index": {
-                    "value": round(0.55 + (num_severity * 0.12), 2),
-                    "unit": "AOD index",
-                    "provenance": "simulated"
-                },
+                "summary": gemini_analysis.get("explanation", "Acute localized pollution sighting correlated with atmospheric telemetry."),
+                "provenance": "inferred",
+                "engine": "Prototype Hotspot Detection Engine",
                 "contributing_report_ids": [report.get("id")]
             }
             saved_hotspot = storage.save_hotspot(new_hotspot)
@@ -141,7 +145,7 @@ class RiskEngine:
                 "status": "pending",
                 "created_at": now_iso,
                 "affected_population": affected_pop,
-                "gemini_summary": gemini_analysis.get("explanation", "Visual sighting matched with elevated ground sensor reading."),
+                "gemini_summary": gemini_analysis.get("explanation", "Visual sighting matched with elevated ground telemetry."),
                 "recommended_intervention": "\n".join([f"• {step}" for step in gemini_analysis.get("recommended_verification", ["Dispatch municipal inspector"])]) or "Deploy inspection unit immediately.",
                 "action_log": [],
                 "location_name": location_name,
@@ -173,7 +177,6 @@ class RiskEngine:
         return "India"
 
     def _infer_city(self, lat: float, lon: float, default_name: str) -> str:
-        # Common BRICS coordinate proximity
         hubs = [
             ("New Delhi", 28.6139, 77.2090),
             ("Mumbai", 19.0760, 72.8777),
@@ -192,7 +195,6 @@ class RiskEngine:
         return default_name
 
     def _check_cross_border_proximity(self, lat: float, lon: float) -> bool:
-        # Border zones (e.g., Punjab / border corridors, Mercosur border, Amur border)
         border_boxes = [
             (29.5, 33.0, 73.5, 76.0),  # India-Pakistan Punjab
             (-26.0, -24.0, -55.0, -53.0), # Brazil-Paraguay-Argentina Tri-Border
