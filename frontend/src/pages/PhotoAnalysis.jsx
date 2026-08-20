@@ -56,7 +56,7 @@ export default function PhotoAnalysis() {
         <div className="space-y-1.5 max-w-xl">
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-mono text-[11px] font-bold uppercase tracking-wider">
-              {analysis.is_demo_fallback ? 'Simulated Prototype Analysis' : 'Gemini Multimodal Vision'}
+              {analysis.is_demo_fallback ? 'Simulated Prototype Analysis' : 'Analysis Complete • Gemini Vision'}
             </span>
             <ProvenanceTag type={analysis.is_demo_fallback ? 'simulated' : 'inferred'} size="xs" />
           </div>

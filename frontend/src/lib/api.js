@@ -22,12 +22,16 @@ export async function submitReport(formData) {
     const res = await fetchWithTimeout(`${API_BASE}/reports`, {
       method: 'POST',
       body: formData,
-    }, 8000);
+    }, 45000);
+    const data = await res.json().catch(() => null);
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Failed to submit report' }));
-      throw new Error(err.detail || `Server error: ${res.status}`);
+      const stage = data?.stage || 'server';
+      const errorMsg = data?.error || data?.detail || `Server error: ${res.status}`;
+      const err = new Error(errorMsg);
+      err.stage = stage;
+      throw err;
     }
-    return await res.json();
+    return data;
   } catch (error) {
     console.error('[API submitReport error]', error);
     throw error;

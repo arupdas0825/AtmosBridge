@@ -12,9 +12,9 @@ def list_hotspots(
     status: Optional[str] = Query(None, description="Filter by active status")
 ):
     hotspots = storage.get_hotspots(country=country)
-    if min_severity is not None:
+    if isinstance(min_severity, int):
         hotspots = [h for h in hotspots if h.get("severity", 1) >= min_severity]
-    if status is not None and status.lower() != "all":
+    if isinstance(status, str) and status.lower() != "all":
         hotspots = [h for h in hotspots if h.get("status", "").lower() == status.lower()]
     return hotspots
 

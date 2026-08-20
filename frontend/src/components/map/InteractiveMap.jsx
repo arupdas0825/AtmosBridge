@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Polyline, Tooltip, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useApp } from '../../state/AppContext';
@@ -97,6 +97,7 @@ export default function InteractiveMap({
   crossborderScenarios = [],
   selectedHotspotId = null,
   onSelectHotspot = () => {},
+  timeFilter = 'realtime',
   height = 'h-[540px]'
 }) {
   const { activeCountry, setActiveCountry, navigateTo } = useApp();
@@ -118,31 +119,65 @@ export default function InteractiveMap({
     setLayers(prev => ({ ...prev, [layerKey]: !prev[layerKey] }));
   };
 
-  // Filter hotspots & sensors according to country tab selection
-  const filteredHotspots = activeCountry === 'all' 
+  // Helper for timeline filter
+  const isWithinTimeFilter = (itemTimestamp, filter) => {
+    if (!filter || filter === 'realtime') return true;
+    if (!itemTimestamp) return true;
+    try {
+      const diffHours = (Date.now() - new Date(itemTimestamp).getTime()) / (1000 * 3600);
+      if (filter === '6h') return diffHours <= 6 || isNaN(diffHours);
+      if (filter === '24h') return diffHours <= 24 || isNaN(diffHours);
+    } catch (e) {
+      return true;
+    }
+    return true;
+  };
+
+  // Filter hotspots & sensors according to country tab selection & time filter
+  const filteredHotspots = (activeCountry === 'all' 
     ? hotspots 
-    : hotspots.filter(h => h.country?.toLowerCase() === activeCountry.toLowerCase());
+    : hotspots.filter(h => h.country?.toLowerCase() === activeCountry.toLowerCase())
+  ).filter(h => isWithinTimeFilter(h.last_updated, timeFilter));
 
-  const filteredSensors = activeCountry === 'all' 
+  const filteredSensors = (activeCountry === 'all' 
     ? sensors 
-    : sensors.filter(s => s.country?.toLowerCase() === activeCountry.toLowerCase());
+    : sensors.filter(s => s.country?.toLowerCase() === activeCountry.toLowerCase())
+  ).filter(s => isWithinTimeFilter(s.last_updated, timeFilter));
 
-  const filteredScenarios = activeCountry === 'all'
+  const filteredScenarios = (activeCountry === 'all'
     ? crossborderScenarios
     : crossborderScenarios.filter(sc => 
         sc.country_source?.toLowerCase().includes(activeCountry.toLowerCase()) || 
         sc.country_target?.toLowerCase().includes(activeCountry.toLowerCase())
-      );
+      )
+  ).filter(sc => isWithinTimeFilter(sc.last_updated, timeFilter));
 
-  // Synthetic wind points derived from hotspots or standard BRICS regional points
-  const windPoints = (activeCountry === 'all' ? hotspots : filteredHotspots).map(h => ({
-    id: `wind_${h.id}`,
-    lat: h.latitude + (h.weather?.wind_direction > 180 ? 0.4 : -0.4),
-    lng: h.longitude + (h.weather?.wind_direction > 90 ? 0.5 : -0.5),
-    speed_kmh: h.weather?.wind_speed ? (h.weather.wind_speed * 3.6).toFixed(1) : '14.2',
-    bearing_deg: h.weather?.wind_direction || 115,
-    direction: h.weather?.wind_direction ? `${Math.round(h.weather.wind_direction)}°` : 'ESE'
-  }));
+  // Wind vectors derived from hotspots and regional sensors
+  const windPoints = [];
+  const baseHotspots = activeCountry === 'all' ? hotspots : filteredHotspots;
+  baseHotspots.forEach(h => {
+    windPoints.push({
+      id: `wind_${h.id}`,
+      lat: h.latitude + (h.weather?.wind_direction > 180 ? 0.35 : -0.35),
+      lng: h.longitude + (h.weather?.wind_direction > 90 ? 0.45 : -0.45),
+      speed_kmh: h.weather?.wind_speed ? (h.weather.wind_speed * 3.6).toFixed(1) : '14.2',
+      bearing_deg: h.weather?.wind_direction || 115,
+      direction: h.weather?.wind_direction ? `${Math.round(h.weather.wind_direction)}°` : 'ESE'
+    });
+  });
+  if (windPoints.length < 3) {
+    const baseSensors = activeCountry === 'all' ? sensors : filteredSensors;
+    baseSensors.slice(0, 4).forEach(s => {
+      windPoints.push({
+        id: `wind_s_${s.id}`,
+        lat: s.latitude + 0.25,
+        lng: s.longitude - 0.35,
+        speed_kmh: '12.5',
+        bearing_deg: 130,
+        direction: 'SE'
+      });
+    });
+  }
 
   const tileUrl = basemapStyle === 'dark'
     ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -151,6 +186,8 @@ export default function InteractiveMap({
   const tileAttribution = basemapStyle === 'dark'
     ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
     : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+  const hasNoData = filteredHotspots.length === 0 && filteredSensors.length === 0 && filteredScenarios.length === 0;
 
   return (
     <div className={`relative w-full ${height} bg-slate-950 rounded-card overflow-hidden border border-slate-800 shadow-card flex flex-col font-sans`}>
@@ -206,7 +243,7 @@ export default function InteractiveMap({
             }`}
           >
             <Wind className="w-3 h-3 text-teal-400" />
-            <span>Winds</span>
+            <span>Winds ({windPoints.length})</span>
           </button>
           <button
             onClick={() => toggleLayer('plumes')}
@@ -239,8 +276,11 @@ export default function InteractiveMap({
           zoom={currentCountryConfig.zoom}
           scrollWheelZoom={true}
           style={{ width: '100%', height: '100%', backgroundColor: '#090D14' }}
-          zoomControl={true}
+          zoomControl={false}
         >
+          {/* Bottom-right Zoom Controls to avoid overlapping top bars */}
+          <ZoomControl position="bottomright" />
+
           {/* Programmatic view controller for active country transitions */}
           <MapViewController activeCountry={activeCountry} />
 
@@ -271,22 +311,33 @@ export default function InteractiveMap({
                   }}
                 >
                   <Popup className="custom-leaflet-popup">
-                    <div className="p-2 space-y-2 max-w-xs font-sans">
-                      <div className="flex items-center gap-1 text-risk-high font-bold text-xs">
+                    <div className="p-3 space-y-2.5 max-w-xs font-sans text-slate-100">
+                      <div className="flex items-center gap-1.5 text-risk-high font-bold text-xs border-b border-slate-800 pb-1.5">
                         <ShieldAlert className="w-4 h-4" />
                         <span>{sc.title}</span>
                       </div>
-                      <p className="text-xs text-slate-700">
-                        <b>Source:</b> {sc.source_region}<br/>
-                        <b>Target Impact:</b> {sc.target_region}
-                      </p>
-                      <div className="text-[11px] font-mono text-slate-500 bg-amber-50 border border-amber-200 p-1.5 rounded">
-                        <b>Status:</b> Predicted Plume (Simulated Dispersion)<br/>
-                        <b>Wind:</b> {sc.wind_vector?.speed_kmh} km/h {sc.wind_vector?.direction}
+                      <div className="text-xs text-slate-300 space-y-1">
+                        <div><b>Source Region:</b> {sc.source_region}</div>
+                        <div><b>Target Impact:</b> {sc.target_region}</div>
+                        <div><b>Pollutant:</b> {sc.pollutant_type}</div>
+                      </div>
+                      <div className="text-[11px] font-mono bg-slate-900 border border-slate-800 p-2 rounded text-slate-300 space-y-1">
+                        <div className="flex justify-between">
+                          <span>Status:</span>
+                          <b className="text-amber-400">Predicted Dispersion</b>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Wind Corridor:</span>
+                          <b>{sc.wind_vector?.speed_kmh} km/h {sc.wind_vector?.direction}</b>
+                        </div>
+                        <div className="flex justify-between border-t border-slate-800 pt-1 text-[10px]">
+                          <span>Provenance:</span>
+                          <span className="text-amber-300 font-semibold">{sc.provenance || 'predicted'}</span>
+                        </div>
                       </div>
                       <button
                         onClick={() => navigateTo('crossborder', { scenarioId: sc.id })}
-                        className="btn-primary py-1 px-3 text-xs w-full justify-center"
+                        className="btn-primary py-1.5 px-3 text-xs w-full justify-center"
                       >
                         Inspect Cross-Border Dossier →
                       </button>
@@ -323,29 +374,35 @@ export default function InteractiveMap({
               icon={createSensorIcon(sensor)}
             >
               <Popup className="custom-leaflet-popup">
-                <div className="p-2 space-y-1.5 font-sans max-w-xs">
-                  <div className="flex items-center gap-1 text-sky-600 font-bold text-xs">
-                    <Radio className="w-3.5 h-3.5" />
-                    <span>{sensor.name}</span>
+                <div className="p-3 space-y-2 font-sans max-w-xs text-slate-100">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                    <div className="flex items-center gap-1.5 text-sky-400 font-bold text-xs">
+                      <Radio className="w-4 h-4" />
+                      <span>{sensor.name}</span>
+                    </div>
+                    <span className="text-[10px] font-mono bg-sky-950 border border-sky-800 text-sky-300 px-1.5 py-0.5 rounded">
+                      Sensor
+                    </span>
                   </div>
-                  <div className="text-xs text-slate-600">
-                    Location: <b>{sensor.city}, {sensor.country}</b><br/>
-                    Coords: <code className="text-[10px]">{sensor.latitude.toFixed(4)}, {sensor.longitude.toFixed(4)}</code>
+                  <div className="text-xs text-slate-300 space-y-1">
+                    <div><b>Location:</b> {sensor.city}, {sensor.country}</div>
+                    <div><b>Coordinates:</b> <code className="text-[10px] bg-slate-900 px-1 py-0.5 rounded text-slate-300">{sensor.latitude.toFixed(4)}, {sensor.longitude.toFixed(4)}</code></div>
                   </div>
-                  <div className="bg-sky-50 border border-sky-200 p-2 rounded text-xs space-y-1">
-                    <div className="flex justify-between font-mono">
+                  <div className="bg-slate-900 border border-slate-800 p-2 rounded text-xs space-y-1 font-mono">
+                    <div className="flex justify-between text-slate-300">
                       <span>PM2.5:</span>
-                      <b className="text-sky-900">{sensor.pollutants?.pm25?.value} µg/m³</b>
+                      <b className="text-sky-300">{sensor.pollutants?.pm25?.value} µg/m³</b>
                     </div>
                     {sensor.pollutants?.pm10 && (
-                      <div className="flex justify-between font-mono">
+                      <div className="flex justify-between text-slate-300">
                         <span>PM10:</span>
-                        <b className="text-sky-900">{sensor.pollutants?.pm10?.value} µg/m³</b>
+                        <b className="text-sky-300">{sensor.pollutants?.pm10?.value} µg/m³</b>
                       </div>
                     )}
                   </div>
-                  <div className="text-[10px] font-mono text-slate-400 italic">
-                    Provenance: Simulated sensor telemetry
+                  <div className="flex items-center justify-between text-[10px] font-mono border-t border-slate-800 pt-1 text-slate-400">
+                    <span>Provenance:</span>
+                    <span className="text-slate-300 font-semibold">{sensor.pollutants?.pm25?.provenance || 'simulated'}</span>
                   </div>
                 </div>
               </Popup>
@@ -365,36 +422,36 @@ export default function InteractiveMap({
                 }}
               >
                 <Popup className="custom-leaflet-popup">
-                  <div className="p-2.5 space-y-2 font-sans max-w-xs">
-                    <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-1.5">
-                      <span className="font-bold text-xs text-slate-900 leading-tight">{hotspot.title}</span>
+                  <div className="p-3 space-y-2.5 font-sans max-w-xs text-slate-100">
+                    <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-1.5">
+                      <span className="font-bold text-xs text-slate-100 leading-tight">{hotspot.title}</span>
                       <SeverityBadge severity={hotspot.severity} size="xs" />
                     </div>
 
-                    <div className="text-xs text-slate-600 space-y-1">
+                    <div className="text-xs text-slate-300 space-y-1">
                       <div><b>Location:</b> {hotspot.city}, {hotspot.country}</div>
-                      <div><b>Coords:</b> <code className="text-[10px] bg-slate-100 px-1 rounded">{hotspot.latitude.toFixed(4)}, {hotspot.longitude.toFixed(4)}</code></div>
-                      <div><b>Risk Score:</b> <b className="text-risk-high">{hotspot.risk_score}/100</b></div>
+                      <div><b>Coords:</b> <code className="text-[10px] bg-slate-900 text-slate-300 px-1 py-0.5 rounded">{hotspot.latitude.toFixed(4)}, {hotspot.longitude.toFixed(4)}</code></div>
+                      <div><b>Risk Index:</b> <b className="text-risk-high">{hotspot.risk_score}/100</b></div>
                       {hotspot.affected_population_estimate && (
-                        <div><b>Pop. Est. (indicative):</b> {hotspot.affected_population_estimate.toLocaleString()}</div>
+                        <div><b>Pop. Est:</b> {hotspot.affected_population_estimate.toLocaleString()}</div>
                       )}
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-200 p-2 rounded text-xs space-y-1">
-                      <div className="font-semibold text-slate-700">Pollutant Telemetry:</div>
-                      <div className="flex justify-between font-mono text-[11px]">
+                    <div className="bg-slate-900 border border-slate-800 p-2 rounded text-xs space-y-1 font-mono">
+                      <div className="font-semibold text-slate-400 font-sans text-[11px]">Pollutant Telemetry:</div>
+                      <div className="flex justify-between text-[11px]">
                         <span>PM2.5:</span>
-                        <b className="text-slate-900">{hotspot.pollutants?.pm25?.value} µg/m³</b>
+                        <b className="text-slate-100">{hotspot.pollutants?.pm25?.value} µg/m³</b>
                       </div>
                       {hotspot.pollutants?.pm10 && (
-                        <div className="flex justify-between font-mono text-[11px]">
+                        <div className="flex justify-between text-[11px]">
                           <span>PM10:</span>
-                          <b className="text-slate-900">{hotspot.pollutants?.pm10?.value} µg/m³</b>
+                          <b className="text-slate-100">{hotspot.pollutants?.pm10?.value} µg/m³</b>
                         </div>
                       )}
                     </div>
 
-                    <p className="text-[11px] text-slate-600 line-clamp-3 leading-relaxed italic bg-amber-50/60 border border-amber-200/60 p-1.5 rounded">
+                    <p className="text-[11px] text-slate-300 line-clamp-3 leading-relaxed italic bg-amber-950/40 border border-amber-900/40 p-2 rounded">
                       "{hotspot.summary}"
                     </p>
 
@@ -417,6 +474,14 @@ export default function InteractiveMap({
           })}
 
         </MapContainer>
+
+        {/* Empty State Banner Overlay if 0 items match current filters */}
+        {hasNoData && (
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-700 text-slate-300 text-xs px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+            <Info className="w-4 h-4 text-sky-400" />
+            <span>No active environmental anomalies match current filters in {currentCountryConfig.name}.</span>
+          </div>
+        )}
       </div>
 
       {/* Map Footer Bar with Provenance Legend & Status */}

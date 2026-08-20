@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "latitude": 28.5,
+    "longitude": 77.2,
+    "aod": 0.88,
+    "provenance": "simulated"
+  },
+  {
+    "latitude": 28.6,
+    "longitude": 77.3,
+    "aod": 0.82,
+    "provenance": "simulated"
+  },
+  {
+    "latitude": 31.6,
+    "longitude": 74.8,
+    "aod": 0.76,
+    "provenance": "simulated"
+  },
+  {
+    "latitude": -23.5,
+    "longitude": -46.6,
+    "aod": 0.52,
+    "provenance": "simulated"
+  },
+  {
+    "latitude": -26.0,
+    "longitude": 29.2,
+    "aod": 0.71,
+    "provenance": "simulated"
+  },
+  {
+    "latitude": 39.5,
+    "longitude": 116.8,
+    "aod": 0.92,
+    "provenance": "simulated"
+  },
+  {
+    "latitude": 55.6,
+    "longitude": 37.8,
+    "aod": 0.42,
+    "provenance": "simulated"
+  }
+]

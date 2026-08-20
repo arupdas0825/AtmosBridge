@@ -1,11 +1,19 @@
 import json
 import base64
 import os
+import time
 import requests
+import logging
 from typing import Dict, Any, Optional, List
 from backend.config import settings
 from backend.models.schemas import GeminiAnalysisResult
 from backend.services.data_service import data_service
+
+logger = logging.getLogger(__name__)
+
+class GeminiUnavailableError(Exception):
+    """Raised when Gemini API is unreachable, unconfigured, or fails all candidate models."""
+    pass
 
 GEMINI_SYSTEM_INSTRUCTION = """
 You are AtmosBridge AI, an expert environmental multimodal analyst for the Hack2Skill × Google Cloud Clean Air initiative.
@@ -43,14 +51,22 @@ class GeminiService:
         voice_transcript: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Analyze a citizen report using Gemini multimodal models or demo-mode fallback.
+        Analyze a citizen report using real Gemini multimodal models.
+        Raises GeminiUnavailableError if Gemini API is unconfigured or fails all models.
         """
+        if not self.api_key:
+            logger.warning("[GeminiService] GEMINI_API_KEY is not configured.")
+            raise GeminiUnavailableError("Gemini API key is not configured on the server.")
+
         # Step 1: Execute backend tools to gather ground-truth environmental context
         aqi_data = {}
         weather_data = {}
         if latitude is not None and longitude is not None:
-            aqi_data = data_service.get_air_quality(latitude, longitude)
-            weather_data = data_service.get_weather(latitude, longitude)
+            try:
+                aqi_data = data_service.get_air_quality(latitude, longitude)
+                weather_data = data_service.get_weather(latitude, longitude)
+            except Exception as e:
+                logger.warning(f"[GeminiService] Telemetry lookup warning: {e}")
 
         # Context prompt block
         env_context = f"""
@@ -72,10 +88,18 @@ Citizen Sighting Report:
 Please evaluate the severity of this pollution event, extract visual/textual evidence, recommend operational municipal verification steps, and provide an explainable risk rationale. Return ONLY valid JSON matching the schema.
 """
 
-        # Step 2: Try calling Gemini via direct REST or SDK across supported model names
-        if self.api_key:
-            candidate_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-pro"]
-            for model_name in candidate_models:
+        # Step 2: Call active Gemini models via REST API
+        candidate_models = [
+            "gemini-flash-latest",
+            "gemini-3.6-flash",
+            "gemini-2.5-flash",
+            "gemini-3.5-flash-lite",
+            "gemini-flash-lite-latest"
+        ]
+
+        last_error = None
+        for model_name in candidate_models:
+            for attempt in range(2):
                 try:
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.api_key}"
                     
@@ -97,13 +121,12 @@ Please evaluate the severity of this pollution event, extract visual/textual evi
                         }
                     }
 
-                    resp = requests.post(url, json=payload, timeout=12)
+                    resp = requests.post(url, json=payload, timeout=30)
                     if resp.status_code == 200:
                         res_json = resp.json()
                         candidates = res_json.get("candidates", [])
                         if candidates:
                             text_out = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                            # Parse JSON
                             if text_out:
                                 parsed = json.loads(text_out)
                                 validated = GeminiAnalysisResult(**parsed)
@@ -111,93 +134,19 @@ Please evaluate the severity of this pollution event, extract visual/textual evi
                                 res_dict["is_demo_fallback"] = False
                                 res_dict["analysis_status"] = "AI analysis verified"
                                 return res_dict
+                    elif resp.status_code == 503 and attempt == 0:
+                        time.sleep(1.5)
+                        continue
+                    else:
+                        last_error = f"Model {model_name} HTTP {resp.status_code}: {resp.text[:200]}"
+                        logger.warning(f"[GeminiService] {last_error}")
+                        break
                 except Exception as e:
-                    continue
+                    last_error = f"Model {model_name} Exception: {str(e)}"
+                    logger.warning(f"[GeminiService] {last_error}")
+                    break
 
-        # Step 3: High-fidelity deterministic Demo-Mode Fallback
-        return self._generate_demo_fallback(
-            description=description,
-            has_image=image_bytes is not None,
-            latitude=latitude,
-            longitude=longitude,
-            weather=weather_data,
-            aqi=aqi_data,
-            voice_transcript=voice_transcript
-        )
-
-    def _generate_demo_fallback(
-        self,
-        description: str,
-        has_image: bool,
-        latitude: Optional[float],
-        longitude: Optional[float],
-        weather: Dict[str, Any],
-        aqi: Dict[str, Any],
-        voice_transcript: Optional[str]
-    ) -> Dict[str, Any]:
-        """
-        Deterministic, intelligent rule-grounded fallback matching Gemini schema.
-        """
-        desc_lower = (description + " " + (voice_transcript or "")).lower()
-
-        if any(k in desc_lower for k in ["industrial", "factory", "chimney", "chemical", "boiler", "stack", "furnace", "scrap"]):
-            event_type = "industrial_smoke"
-            source = "Unpermitted industrial chimney discharge & boiler combustion"
-            severity = 4 if any(w in desc_lower for w in ["thick", "black", "heavy", "acrid", "huge"]) else 3
-            evidence = ["Dense dark particulate plume", "Ground-level dispersion towards residential area", "Visible stack emission"]
-            verification = ["Dispatch municipal environmental inspector to industrial quadrant", "Verify factory continuous emission monitoring (CEMS) log", "Cross-reference nearest industrial zone sensor"]
-        elif any(k in desc_lower for k in ["farm", "crop", "stubble", "field", "agriculture", "paddy", "straw"]):
-            event_type = "agricultural_burning"
-            source = "Post-harvest paddy crop residue open field burning"
-            severity = 3
-            evidence = ["Wide-area low-altitude smoke haze", "Thermal biomass signature indicators", "Horizontal drift across agricultural tract"]
-            verification = ["Alert local agricultural enforcement cell", "Deploy drone surveillance unit for fire boundary mapping", "Coordinate mechanized balers and water tenders"]
-        elif any(k in desc_lower for k in ["traffic", "truck", "diesel", "vehicle", "highway", "exhaust", "cars"]):
-            event_type = "vehicular"
-            source = "Heavy vehicular congestion and diesel freight idling"
-            severity = 2
-            evidence = ["Corridor-level particulate buildup", "Exhaust accumulation along high-density transit artery"]
-            verification = ["Optimize traffic signal sequencing to clear congestion", "Deploy mobile particulate scrubber units"]
-        elif any(k in desc_lower for k in ["dust", "construction", "sand", "demolition", "excavation"]):
-            event_type = "dust"
-            source = "Uncovered construction excavation and road dust re-suspension"
-            severity = 2
-            evidence = ["Coarse particulate cloud", "Lack of mandated dust suppression water netting"]
-            verification = ["Issue site compliance notice to construction supervisor", "Mandate immediate water misting application"]
-        elif any(k in desc_lower for k in ["garbage", "trash", "waste", "dump", "plastic", "tire"]):
-            event_type = "waste_burning"
-            source = "Illegal municipal solid waste or plastic open combustion"
-            severity = 4
-            evidence = ["High-toxicity dark acrid smoke", "Low-temperature open pile smoldering", "Heavy local odor and particulate density"]
-            verification = ["Dispatch immediate municipal fire response", "Extinguish smoldering waste pile with foam/water", "Issue penalty notice to site operators"]
-        else:
-            event_type = "industrial_smoke"
-            source = "Unidentified acute particulate emission source"
-            severity = 3
-            evidence = ["Dense particulate plume observed in citizen sighting", "Localized visibility reduction"]
-            verification = ["Dispatch local environmental patrol team for ground verification", "Inspect nearby industrial and commercial units"]
-
-        wind_spd = weather.get("wind_speed", 6.8)
-        wind_dir = weather.get("wind_direction", 310)
-        pm25 = aqi.get("pm25", {}).get("value", 160.0)
-
-        explanation = (
-            f"Citizen sighting confirms {source.lower()}. "
-            f"Current wind conditions ({wind_spd} km/h from {wind_dir}°) indicate limited atmospheric dispersion, "
-            f"amplifying localized risk on top of ambient PM2.5 levels ({pm25} µg/m³). "
-            f"Immediate human-supervised verification recommended."
-        )
-
-        return {
-            "event_type": event_type,
-            "pollution_source": source,
-            "severity": severity,
-            "confidence": 0.92 if has_image else 0.84,
-            "visual_evidence": evidence,
-            "recommended_verification": verification,
-            "explanation": explanation,
-            "is_demo_fallback": True,
-            "analysis_status": "Simulated prototype analysis"
-        }
+        # Raise exception if Gemini is unavailable
+        raise GeminiUnavailableError(f"Gemini analysis is temporarily unavailable. Details: {last_error}")
 
 gemini_service = GeminiService()

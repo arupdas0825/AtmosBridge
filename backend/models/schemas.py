@@ -33,6 +33,8 @@ class ReportCreate(BaseModel):
     voice_transcript: Optional[str] = None
 
 class ReportResponse(BaseModel):
+    success: bool = True
+    incident_id: Optional[str] = None
     id: str
     created_at: str
     status: str

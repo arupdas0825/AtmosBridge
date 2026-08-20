@@ -1,1 +1,323 @@
-[]
+[
+  {
+    "id": "hotspot_ind_delhi_01",
+    "title": "Industrial Waste Combustion \u2014 Okhla Phase II",
+    "country": "India",
+    "city": "New Delhi",
+    "latitude": 28.5355,
+    "longitude": 77.269,
+    "severity": 4,
+    "severity_label": "critical",
+    "risk_score": 89.5,
+    "status": "active",
+    "pollutants": {
+      "pm25": {
+        "value": 248.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "pm10": {
+        "value": 385.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "no2": {
+        "value": 78.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      },
+      "so2": {
+        "value": 24.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      }
+    },
+    "weather": {
+      "temperature": 32.5,
+      "humidity": 68,
+      "wind_speed": 4.5,
+      "wind_direction": 310,
+      "provenance": "observed"
+    },
+    "affected_population_estimate": 58000,
+    "cross_border_risk": false,
+    "reports_count": 9,
+    "last_updated": "2026-08-20T14:10:37.491747+00:00",
+    "summary": "Heavy unpermitted rubber and waste combustion confirmed by 9 visual citizen sightings and sharp PM2.5 spike to 248 \u00b5g/m\u00b3. Low wind speed prevents horizontal ventilation.",
+    "satellite_aerosol_index": {
+      "value": 0.88,
+      "unit": "AOD index",
+      "provenance": "simulated"
+    },
+    "contributing_report_ids": [
+      "rep_seed_01",
+      "rep_seed_02"
+    ]
+  },
+  {
+    "id": "hotspot_ind_punjab_02",
+    "title": "Agricultural Stubble Fire Cluster \u2014 Amritsar East",
+    "country": "India",
+    "city": "Amritsar",
+    "latitude": 31.634,
+    "longitude": 74.8723,
+    "severity": 3,
+    "severity_label": "high",
+    "risk_score": 78.0,
+    "status": "active",
+    "pollutants": {
+      "pm25": {
+        "value": 192.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "pm10": {
+        "value": 290.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "no2": {
+        "value": 32.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      },
+      "so2": {
+        "value": 14.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      }
+    },
+    "weather": {
+      "temperature": 29.0,
+      "humidity": 55,
+      "wind_speed": 14.2,
+      "wind_direction": 115,
+      "provenance": "observed"
+    },
+    "affected_population_estimate": 84000,
+    "cross_border_risk": true,
+    "reports_count": 6,
+    "last_updated": "2026-08-20T14:10:37.491747+00:00",
+    "summary": "Post-harvest paddy straw burning generating significant aerosol plume. Prevailing ESE wind (14 km/h) is transporting smoke towards the Lahore trans-boundary corridor.",
+    "satellite_aerosol_index": {
+      "value": 0.76,
+      "unit": "AOD index",
+      "provenance": "simulated"
+    },
+    "contributing_report_ids": [
+      "rep_seed_03"
+    ]
+  },
+  {
+    "id": "hotspot_bra_sp_01",
+    "title": "Industrial Smelting Emissions \u2014 Cubat\u00e3o Valley",
+    "country": "Brazil",
+    "city": "S\u00e3o Paulo",
+    "latitude": -23.895,
+    "longitude": -46.425,
+    "severity": 3,
+    "severity_label": "high",
+    "risk_score": 74.5,
+    "status": "active",
+    "pollutants": {
+      "pm25": {
+        "value": 115.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "pm10": {
+        "value": 180.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "no2": {
+        "value": 68.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      },
+      "so2": {
+        "value": 45.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      }
+    },
+    "weather": {
+      "temperature": 24.0,
+      "humidity": 82,
+      "wind_speed": 6.0,
+      "wind_direction": 160,
+      "provenance": "observed"
+    },
+    "affected_population_estimate": 42000,
+    "cross_border_risk": false,
+    "reports_count": 4,
+    "last_updated": "2026-08-20T14:10:37.491747+00:00",
+    "summary": "Valley temperature inversion trapping metallurgical emissions in coastal Serra do Mar basin.",
+    "satellite_aerosol_index": {
+      "value": 0.62,
+      "unit": "AOD index",
+      "provenance": "simulated"
+    },
+    "contributing_report_ids": [
+      "rep_seed_04"
+    ]
+  },
+  {
+    "id": "hotspot_za_joburg_01",
+    "title": "Coal Mining Dust & Smoldering Slag \u2014 Mpumalanga Belt",
+    "country": "South Africa",
+    "city": "Johannesburg",
+    "latitude": -26.015,
+    "longitude": 29.234,
+    "severity": 3,
+    "severity_label": "high",
+    "risk_score": 76.0,
+    "status": "active",
+    "pollutants": {
+      "pm25": {
+        "value": 138.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "pm10": {
+        "value": 265.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "no2": {
+        "value": 54.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      },
+      "so2": {
+        "value": 62.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      }
+    },
+    "weather": {
+      "temperature": 21.5,
+      "humidity": 45,
+      "wind_speed": 11.0,
+      "wind_direction": 280,
+      "provenance": "observed"
+    },
+    "affected_population_estimate": 36000,
+    "cross_border_risk": true,
+    "reports_count": 5,
+    "last_updated": "2026-08-20T14:10:37.491747+00:00",
+    "summary": "Highveld power station corridor combining with opencast dust re-suspension and trans-boundary drift towards Eswatini/Mozambique border.",
+    "satellite_aerosol_index": {
+      "value": 0.71,
+      "unit": "AOD index",
+      "provenance": "simulated"
+    },
+    "contributing_report_ids": [
+      "rep_seed_05"
+    ]
+  },
+  {
+    "id": "hotspot_chn_beijing_01",
+    "title": "Hebei Heavy Industrial Stagnation Zone",
+    "country": "China",
+    "city": "Beijing",
+    "latitude": 39.45,
+    "longitude": 116.8,
+    "severity": 4,
+    "severity_label": "critical",
+    "risk_score": 86.0,
+    "status": "active",
+    "pollutants": {
+      "pm25": {
+        "value": 210.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "pm10": {
+        "value": 320.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "no2": {
+        "value": 85.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      },
+      "so2": {
+        "value": 38.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      }
+    },
+    "weather": {
+      "temperature": 18.0,
+      "humidity": 75,
+      "wind_speed": 3.8,
+      "wind_direction": 190,
+      "provenance": "observed"
+    },
+    "affected_population_estimate": 125000,
+    "cross_border_risk": false,
+    "reports_count": 8,
+    "last_updated": "2026-08-20T14:10:37.491747+00:00",
+    "summary": "Southerly wind pushing regional industrial emissions against Taihang Mountain barrier creating intense localized haze accumulation.",
+    "satellite_aerosol_index": {
+      "value": 0.92,
+      "unit": "AOD index",
+      "provenance": "simulated"
+    },
+    "contributing_report_ids": []
+  },
+  {
+    "id": "hotspot_rus_moscow_01",
+    "title": "Refinery Flaring & Ring Road Congestion \u2014 Kapotnya",
+    "country": "Russia",
+    "city": "Moscow",
+    "latitude": 55.635,
+    "longitude": 37.785,
+    "severity": 2,
+    "severity_label": "watch",
+    "risk_score": 48.0,
+    "status": "monitoring",
+    "pollutants": {
+      "pm25": {
+        "value": 45.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "pm10": {
+        "value": 78.0,
+        "unit": "\u00b5g/m\u00b3",
+        "provenance": "observed"
+      },
+      "no2": {
+        "value": 58.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      },
+      "so2": {
+        "value": 22.0,
+        "unit": "ppb",
+        "provenance": "simulated"
+      }
+    },
+    "weather": {
+      "temperature": 14.0,
+      "humidity": 70,
+      "wind_speed": 12.0,
+      "wind_direction": 270,
+      "provenance": "observed"
+    },
+    "affected_population_estimate": 28000,
+    "cross_border_risk": false,
+    "reports_count": 3,
+    "last_updated": "2026-08-20T14:10:37.491747+00:00",
+    "summary": "Moderate emissions flare at oil processing facility combined with heavy ring-road diesel transport.",
+    "satellite_aerosol_index": {
+      "value": 0.42,
+      "unit": "AOD index",
+      "provenance": "simulated"
+    },
+    "contributing_report_ids": []
+  }
+]

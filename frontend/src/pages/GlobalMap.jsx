@@ -31,21 +31,25 @@ export default function GlobalMap() {
       setLoading(true);
       try {
         const [hData, sData, xbData] = await Promise.all([
-          getHotspots(activeCountry),
-          getSensors(activeCountry),
+          getHotspots('all'),
+          getSensors('all'),
           getCrossBorderScenarios()
         ]);
         setHotspots(hData);
         setSensors(sData);
         setCrossborderScenarios(xbData);
       } catch (err) {
-        console.error(err);
+        console.error('[GlobalMap loadMapData error]', err);
       } finally {
         setLoading(false);
       }
     }
     loadMapData();
-  }, [activeCountry]);
+  }, []);
+
+  const filteredQuickHotspots = activeCountry === 'all' 
+    ? hotspots 
+    : hotspots.filter(h => h.country?.toLowerCase() === activeCountry.toLowerCase());
 
   const handleSelectHotspot = (hotspot) => {
     setActiveHotspotId(hotspot.id);
@@ -104,6 +108,7 @@ export default function GlobalMap() {
         crossborderScenarios={crossborderScenarios}
         selectedHotspotId={activeHotspotId}
         onSelectHotspot={handleSelectHotspot}
+        timeFilter={timeFilter}
         height="h-[520px]"
       />
 
@@ -112,7 +117,7 @@ export default function GlobalMap() {
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-ink flex items-center gap-2">
             <Flame className="w-4 h-4 text-risk-high" />
-            <span>Active Hotspots in Current Airshed ({hotspots.length})</span>
+            <span>Active Hotspots in Current Airshed ({filteredQuickHotspots.length})</span>
           </h3>
           <button
             onClick={() => navigateTo('hotspots')}
@@ -124,7 +129,7 @@ export default function GlobalMap() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {hotspots.slice(0, 3).map((h) => (
+          {filteredQuickHotspots.slice(0, 3).map((h) => (
             <div
               key={h.id}
               onClick={() => handleSelectHotspot(h)}

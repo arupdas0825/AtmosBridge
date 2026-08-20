@@ -179,13 +179,13 @@ export default function CitizenReport() {
 
   // Coordinate Validation
   const validateForm = () => {
-    if (!description.trim()) {
-      return 'Please provide a description of the pollution sighting.';
+    if (!description.trim() && !photoFile) {
+      return 'Please provide a photo or a description of the pollution sighting.';
     }
-    if (isNaN(locationState.latitude) || locationState.latitude < -90 || locationState.latitude > 90) {
+    if (locationState.latitude === '' || isNaN(locationState.latitude) || locationState.latitude < -90 || locationState.latitude > 90) {
       return 'Latitude must be a valid number between -90 and +90 degrees.';
     }
-    if (isNaN(locationState.longitude) || locationState.longitude < -180 || locationState.longitude > 180) {
+    if (locationState.longitude === '' || isNaN(locationState.longitude) || locationState.longitude < -180 || locationState.longitude > 180) {
       return 'Longitude must be a valid number between -180 and +180 degrees.';
     }
     return null;
@@ -204,11 +204,12 @@ export default function CitizenReport() {
     setErrorMessage('');
 
     try {
+      const effectiveDesc = description.trim() || (photoFile ? 'Pollution sighting photo evidence attached.' : '');
       const formData = new FormData();
-      formData.append('description', description);
+      formData.append('description', effectiveDesc);
       formData.append('latitude', locationState.latitude.toString());
       formData.append('longitude', locationState.longitude.toString());
-      formData.append('location_name', locationState.label);
+      formData.append('location_name', locationState.label || `Coords (${locationState.latitude}, ${locationState.longitude})`);
       formData.append('language', language);
       if (photoFile) {
         formData.append('photo', photoFile);
@@ -219,7 +220,18 @@ export default function CitizenReport() {
       await refreshData();
       navigateTo('analysis-result', { reportData: reportResult });
     } catch (err) {
-      setErrorMessage(err.message || 'Submission failed. Please retry.');
+      console.error('[CitizenReport Submit Error]', err);
+      let userMsg = err.message;
+      if (err.name === 'AbortError' || err.message?.includes('aborted') || err.message?.includes('timeout')) {
+        userMsg = 'Unable to reach the analysis service. Please try again.';
+      } else if (err.stage === 'upload' || err.stage === 'validation') {
+        userMsg = err.message || 'Image validation failed. Please upload a JPEG, PNG, or WebP under 5 MB.';
+      } else if (err.stage === 'gemini') {
+        userMsg = err.message || 'Gemini analysis is temporarily unavailable.';
+      } else if (!userMsg || userMsg === 'Failed to submit report') {
+        userMsg = 'Unable to submit report right now. Please check your connection and try again.';
+      }
+      setErrorMessage(userMsg);
     } finally {
       setIsSubmitting(false);
     }

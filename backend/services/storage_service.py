@@ -53,18 +53,33 @@ class StorageService:
 
     def _init_storage(self):
         self.writable_dir.mkdir(parents=True, exist_ok=True)
-        for f in [
-            self.reports_file,
-            self.hotspots_file,
-            self.alerts_file,
-            self.crossborder_file,
-            self.sensors_file,
-            self.audit_log_file,
-            self.satellite_file,
-        ]:
-            if not f.exists():
-                with open(f, "w", encoding="utf-8") as fp:
+        bundle_files = [
+            ("reports.json", self.reports_file),
+            ("hotspots.json", self.hotspots_file),
+            ("alerts.json", self.alerts_file),
+            ("crossborder.json", self.crossborder_file),
+            ("sensors.json", self.sensors_file),
+            ("audit_log.json", self.audit_log_file),
+            ("satellite.json", self.satellite_file),
+        ]
+        for fname, dst_file in bundle_files:
+            src_file = self.data_dir / fname
+            if src_file.exists() and (not dst_file.exists() or dst_file.stat().st_size <= 5):
+                try:
+                    shutil.copy2(str(src_file), str(dst_file))
+                except Exception:
+                    pass
+            elif not dst_file.exists():
+                with open(dst_file, "w", encoding="utf-8") as fp:
                     json.dump([], fp, indent=2)
+
+        # Auto-seed baseline datasets if hotspots or sensors are empty
+        if len(self._load_json(self.hotspots_file)) == 0 or len(self._load_json(self.sensors_file)) == 0:
+            try:
+                from scripts.seed_data import generate_seed_data
+                generate_seed_data()
+            except Exception as e:
+                print(f"[StorageService] Auto-seed trigger error: {e}")
 
     def _load_json(self, file_path: Path) -> List[Dict[str, Any]]:
         try:
