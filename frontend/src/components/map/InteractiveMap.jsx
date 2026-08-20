@@ -376,7 +376,7 @@ export default function InteractiveMap({
                       <div><b>Coords:</b> <code className="text-[10px] bg-slate-100 px-1 rounded">{hotspot.latitude.toFixed(4)}, {hotspot.longitude.toFixed(4)}</code></div>
                       <div><b>Risk Score:</b> <b className="text-risk-high">{hotspot.risk_score}/100</b></div>
                       {hotspot.affected_population_estimate && (
-                        <div><b>Est. Population Impacted:</b> {hotspot.affected_population_estimate.toLocaleString()}</div>
+                        <div><b>Pop. Est. (indicative):</b> {hotspot.affected_population_estimate.toLocaleString()}</div>
                       )}
                     </div>
 

@@ -20,9 +20,10 @@ export default function VoiceReport() {
 
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [locationName, setLocationName] = useState('Okhla Industrial Area, Phase II');
-  const [latitude, setLatitude] = useState(28.5355);
-  const [longitude, setLongitude] = useState(77.2690);
+  const [locationName, setLocationName] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [speechSupported, setSpeechSupported] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -32,6 +33,7 @@ export default function VoiceReport() {
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
+      setSpeechSupported(true);
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -51,6 +53,8 @@ export default function VoiceReport() {
       };
 
       recognitionRef.current = recognition;
+    } else {
+      setSpeechSupported(false);
     }
   }, [language]);
 
@@ -59,33 +63,18 @@ export default function VoiceReport() {
       recognitionRef.current?.stop();
       setIsRecording(false);
     } else {
+      if (!speechSupported || !recognitionRef.current) {
+        setErrorMessage('Web Speech API is not supported in your browser. Please use Chrome or Edge, or type your report directly below.');
+        return;
+      }
       setErrorMessage('');
       try {
-        if (recognitionRef.current) {
-          recognitionRef.current.lang = language === 'hi' ? 'hi-IN' : language === 'bn' ? 'bn-IN' : 'en-IN';
-          recognitionRef.current.start();
-          setIsRecording(true);
-        } else {
-          // Simulated voice capture fallback
-          setIsRecording(true);
-          const sampleTexts = {
-            en: 'Large industrial smoke plume rising near the factories. Burning plastic smell.',
-            hi: 'फैक्ट्री के पास भारी काला धुआं उठ रहा है और प्लास्टिक जलने की तेज गंध आ रही है।',
-            bn: 'কারখানার কাছে ঘন কালো ধোঁয়া উঠছে এবং পোড়া গন্ধ পাওয়া যাচ্ছে।'
-          };
-          let text = sampleTexts[language] || sampleTexts.en;
-          let idx = 0;
-          const interval = setInterval(() => {
-            idx += 4;
-            setTranscript(text.substring(0, idx));
-            if (idx >= text.length) {
-              clearInterval(interval);
-              setIsRecording(false);
-            }
-          }, 150);
-        }
+        recognitionRef.current.lang = language === 'hi' ? 'hi-IN' : language === 'bn' ? 'bn-IN' : 'en-IN';
+        recognitionRef.current.start();
+        setIsRecording(true);
       } catch (err) {
         console.warn(err);
+        setErrorMessage('Could not start recording. Please check microphone permissions.');
         setIsRecording(false);
       }
     }
@@ -96,6 +85,20 @@ export default function VoiceReport() {
       setErrorMessage('Please record your voice report or type a description first.');
       return;
     }
+    if (!locationName.trim()) {
+      setErrorMessage('Please enter a location name before submitting.');
+      return;
+    }
+    const lat = parseFloat(latitude);
+    const lon = parseFloat(longitude);
+    if (isNaN(lat) || lat < -90 || lat > 90) {
+      setErrorMessage('Please enter a valid latitude (-90 to +90).');
+      return;
+    }
+    if (isNaN(lon) || lon < -180 || lon > 180) {
+      setErrorMessage('Please enter a valid longitude (-180 to +180).');
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMessage('');
@@ -104,8 +107,8 @@ export default function VoiceReport() {
       const formData = new FormData();
       formData.append('description', transcript);
       formData.append('voice_transcript', transcript);
-      formData.append('latitude', latitude.toString());
-      formData.append('longitude', longitude.toString());
+      formData.append('latitude', lat.toString());
+      formData.append('longitude', lon.toString());
       formData.append('location_name', locationName);
       formData.append('language', language);
 
@@ -221,16 +224,52 @@ export default function VoiceReport() {
           />
         </div>
 
-        {/* Location Context */}
-        <div className="w-full flex items-center justify-between text-xs text-ink-muted bg-surface p-2.5 rounded-md border border-slate-200">
-          <span className="flex items-center gap-1.5 font-medium text-ink">
+        {/* Location Fields */}
+        <div className="w-full space-y-2 text-left">
+          <label className="block text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-brand" />
-            {locationName}
-          </span>
-          <span className="font-mono text-[11px] text-slate-500">
-            ({latitude.toFixed(3)}, {longitude.toFixed(3)})
-          </span>
+            <span>Incident Location <span className="text-risk-critical">*</span></span>
+          </label>
+          <input
+            type="text"
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
+            placeholder="Neighborhood, district, or landmark name"
+            className="input-control text-xs w-full"
+            required
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              step="0.0001"
+              min="-90"
+              max="90"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+              placeholder="Latitude (-90 to +90)"
+              className="input-control text-xs font-mono"
+              required
+            />
+            <input
+              type="number"
+              step="0.0001"
+              min="-180"
+              max="180"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              placeholder="Longitude (-180 to +180)"
+              className="input-control text-xs font-mono"
+              required
+            />
+          </div>
         </div>
+
+        {!speechSupported && (
+          <div className="w-full p-2.5 bg-amber-50 border border-amber-200 rounded-md text-[11px] text-amber-900 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+            <span>Web Speech API is not supported in this browser. Please use Chrome or Edge, or type your incident description directly in the transcript box below.</span>
+          </div>
+        )}
 
         {errorMessage && (
           <div className="w-full p-2.5 bg-red-50 text-risk-critical rounded-md text-xs flex items-center gap-2 border border-red-200">
@@ -242,7 +281,7 @@ export default function VoiceReport() {
         {/* Submit Voice Report CTA */}
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting || !transcript.trim()}
+          disabled={isSubmitting || !transcript.trim() || !locationName.trim()}
           className="btn-primary w-full text-sm py-3 font-semibold shadow-md shadow-brand/20"
         >
           {isSubmitting ? (

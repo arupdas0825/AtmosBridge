@@ -74,48 +74,9 @@ export function AppProvider({ children }) {
     if (params.scenarioId) setActiveScenarioId(params.scenarioId);
     if (params.reportData) {
       setLastSubmittedReport(params.reportData);
-      
-      // Push citizen submission into active alerts list so Authority sees it immediately
-      const newAlert = {
-        id: `alt_${Date.now().toString().slice(-6)}`,
-        hotspot_id: activeHotspotId || 'hotspot_ind_delhi_01',
-        title: `Citizen Sighting: ${params.reportData.pollution_source || 'Unverified Local Emission'}`,
-        pollution_type: params.reportData.pollution_source || 'Citizen Reported Emission',
-        severity: params.reportData.severity >= 3 ? 'critical' : 'high',
-        risk_score: (params.reportData.severity || 3) * 22.5,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        affected_population: 35000,
-        evidence_count: {
-          citizen_reports: 1,
-          photos: params.reportData.photo_attached ? 1 : 0,
-          sensor_anomalies: 1
-        },
-        gemini_summary: params.reportData.explanation || 'New citizen sighting logged with structured multimodal analysis.',
-        recommended_intervention: '1. Review submitted photographic and textual evidence.\n2. Acknowledge and dispatch field inspection squad if validated.',
-        action_log: [
-          {
-            action: 'report_received',
-            actor: 'Citizen Observer',
-            timestamp: new Date().toISOString(),
-            notes: 'Field evidence submitted via Citizen Portal.'
-          },
-          {
-            action: 'ai_triage',
-            actor: 'Google Gemini Multimodal AI',
-            timestamp: new Date().toISOString(),
-            notes: 'Multimodal extraction confirmed particulate signature.'
-          }
-        ],
-        location_name: params.reportData.location_name || 'Detected Location',
-        country: 'India',
-        latitude: params.reportData.latitude || 28.5355,
-        longitude: params.reportData.longitude || 77.2690,
-        evidence_photo_url: params.reportData.photo_url || null
-      };
-
-      setAlertsList(prev => [newAlert, ...prev]);
-      setPendingAlertsCount(prev => prev + 1);
+      // The backend risk_engine creates the real authority alert during report submission.
+      // refreshData() (called in CitizenReport/VoiceReport after submitReport) syncs the real alert.
+      // Do NOT construct a local fake alert here — it would inject fabricated values.
     }
     
     setCurrentScreen(screen);

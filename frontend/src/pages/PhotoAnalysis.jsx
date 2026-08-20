@@ -21,36 +21,32 @@ import {
 export default function PhotoAnalysis() {
   const { t, lastSubmittedReport, navigateTo } = useApp();
 
-  // Fallback demo analysis if opened directly
-  const report = lastSubmittedReport || {
-    id: 'rep_demo_99',
-    created_at: new Date().toISOString(),
-    description: 'Thick black smoke billowing from waste processing area behind industrial complex.',
-    location_name: 'Okhla Industrial Area, Phase II',
-    latitude: 28.5355,
-    longitude: 77.2690,
-    photo_url: 'https://images.unsplash.com/photo-1579240830604-fa9a781258d4?w=600&auto=format&fit=crop&q=60',
-    analysis: {
-      event_type: 'industrial_smoke',
-      pollution_source: 'Unpermitted tire and industrial scrap combustion',
-      severity: 4,
-      confidence: 0.94,
-      visual_evidence: [
-        'Dense dark particulate plume',
-        'Ground-level dispersion towards residential colonies',
-        'Visible low-altitude acrid haze'
-      ],
-      recommended_verification: [
-        'Dispatch municipal environmental inspection squad',
-        'Examine continuous stack emission (CEMS) telemetry',
-        'Cross-check nearest ground micro-sensor AQI-DEL-01'
-      ],
-      explanation: 'High-density hydrocarbon combustion combined with atmospheric stagnation (wind 4.5 km/h) creates severe localized acute exposure risk.'
-    }
-  };
+  // Only show real submitted report — never fabricate one
+  const report = lastSubmittedReport;
+
+  if (!report) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 font-sans text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto">
+          <Eye className="w-8 h-8 text-slate-400" />
+        </div>
+        <h2 className="text-xl font-bold text-ink">No Analysis Available</h2>
+        <p className="text-sm text-ink-muted max-w-md mx-auto leading-relaxed">
+          Submit a pollution sighting first. Gemini will analyze your photo and description to extract structured incident intelligence.
+        </p>
+        <button
+          onClick={() => navigateTo('report')}
+          className="btn-primary text-sm px-6 py-2.5 mt-2 inline-flex"
+        >
+          <FileText className="w-4 h-4" />
+          <span>Submit a Pollution Report</span>
+        </button>
+      </div>
+    );
+  }
 
   const analysis = report.analysis || {};
-  const eventTypeFormatted = (analysis.event_type || 'industrial_smoke').replace('_', ' ').toUpperCase();
+  const eventTypeFormatted = (analysis.event_type || 'pollution_sighting').replace('_', ' ').toUpperCase();
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6 font-sans">
@@ -75,10 +71,10 @@ export default function PhotoAnalysis() {
         <div className="bg-white/10 backdrop-blur-md p-4 rounded-card border border-white/20 text-center space-y-1.5 flex-shrink-0">
           <span className="text-[11px] font-medium text-slate-200 block">AI Severity Level</span>
           <div className="flex justify-center">
-            <SeverityBadge severity={analysis.severity || 3} size="lg" />
+            <SeverityBadge severity={analysis.severity || 1} size="lg" />
           </div>
           <span className="text-[11px] font-mono font-semibold text-amber-300 block">
-            Confidence: {Math.round((analysis.confidence || 0.9) * 100)}%
+            Confidence: {Math.round((analysis.confidence || 0.5) * 100)}%
           </span>
         </div>
       </div>
@@ -133,46 +129,52 @@ export default function PhotoAnalysis() {
               </div>
               <div>
                 <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">{t.sourceLabel || 'Identified Source'}</span>
-                <div className="text-sm font-semibold text-brand mt-0.5">{analysis.pollution_source}</div>
+                <div className="text-sm font-semibold text-brand mt-0.5">{analysis.pollution_source || 'Under analysis'}</div>
               </div>
             </div>
 
             {/* Explainable Rationale */}
-            <div className="bg-surface p-4 rounded-card border border-slate-200/80 space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-brand uppercase tracking-wider">
-                <FileText className="w-3.5 h-3.5" />
-                <span>{t.aiExplanationLabel || 'Gemini Multimodal Reasoning'}</span>
+            {analysis.explanation && (
+              <div className="bg-surface p-4 rounded-card border border-slate-200/80 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-brand uppercase tracking-wider">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{t.aiExplanationLabel || 'Gemini Multimodal Reasoning'}</span>
+                </div>
+                <p className="text-xs text-ink leading-relaxed">
+                  {analysis.explanation}
+                </p>
               </div>
-              <p className="text-xs text-ink leading-relaxed">
-                {analysis.explanation}
-              </p>
-            </div>
+            )}
 
             {/* Visual Evidence Cues */}
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">{t.visualEvidenceLabel || 'Visual Evidence Cues'}</span>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {(analysis.visual_evidence || []).map((cue, idx) => (
-                  <li key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-md border border-slate-200 text-ink">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-brand flex-shrink-0" />
-                    <span>{cue}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {(analysis.visual_evidence || []).length > 0 && (
+              <div className="space-y-2">
+                <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">{t.visualEvidenceLabel || 'Visual Evidence Cues'}</span>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {(analysis.visual_evidence || []).map((cue, idx) => (
+                    <li key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-md border border-slate-200 text-ink">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-brand flex-shrink-0" />
+                      <span>{cue}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Recommended Verification Steps */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">{t.verificationLabel || 'Recommended Protocol'}</span>
-              <div className="space-y-1.5">
-                {(analysis.recommended_verification || []).map((step, idx) => (
-                  <div key={idx} className="text-xs text-ink flex items-start gap-2">
-                    <span className="font-mono text-brand font-bold">{idx + 1}.</span>
-                    <span>{step}</span>
-                  </div>
-                ))}
+            {(analysis.recommended_verification || []).length > 0 && (
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">{t.verificationLabel || 'Recommended Protocol'}</span>
+                <div className="space-y-1.5">
+                  {(analysis.recommended_verification || []).map((step, idx) => (
+                    <div key={idx} className="text-xs text-ink flex items-start gap-2">
+                      <span className="font-mono text-brand font-bold">{idx + 1}.</span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
 
@@ -210,3 +212,4 @@ export default function PhotoAnalysis() {
     </div>
   );
 }
+

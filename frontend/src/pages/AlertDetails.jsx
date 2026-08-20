@@ -161,8 +161,8 @@ export default function AlertDetails() {
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-brand flex-shrink-0" />
             <div>
-              <span className="block text-[11px] text-ink-muted">Estimated Population Exposed</span>
-              <b className="text-ink font-mono">{alert.affected_population?.toLocaleString()} residents</b>
+              <span className="block text-[11px] text-ink-muted">Est. Population Exposed <span className="font-normal text-[10px] text-slate-400">(rough heuristic)</span></span>
+              <b className="text-ink font-mono">{alert.affected_population?.toLocaleString() || '—'}{alert.affected_population ? ' residents' : ''}</b>
             </div>
           </div>
 

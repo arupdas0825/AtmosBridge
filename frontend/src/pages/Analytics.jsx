@@ -63,10 +63,10 @@ export default function Analytics() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">{t.navAnalytics || 'Public Health & Regional Analytics'}</h1>
-            <ProvenanceTag type="observed" size="xs" />
+            <ProvenanceTag type="modelled" size="xs" />
           </div>
           <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-            Multi-year historical seasonal trends and cross-regional air quality comparisons across BRICS airsheds.
+            Illustrative seasonal PM2.5 trend patterns across BRICS airsheds, based on historical published ranges. Not live or real-time measurements.
           </p>
         </div>
 
@@ -92,10 +92,10 @@ export default function Analytics() {
       <div className="card-surface p-6 sm:p-7 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="font-bold text-base text-ink">12-Month Seasonal PM2.5 Trajectories (BRICS Airsheds)</h3>
-            <p className="text-xs text-ink-muted">Seasonal post-harvest stubble burning spikes in Delhi and winter Highveld heating peaks in South Africa.</p>
+            <h3 className="font-bold text-base text-ink">12-Month Seasonal PM2.5 Trend Patterns (BRICS Airsheds)</h3>
+            <p className="text-xs text-ink-muted">Illustrative historical seasonal ranges based on published CPCB, MEE, and WHO annual reports. Values are representative averages — not live station telemetry.</p>
           </div>
-          <ProvenanceTag type="observed" size="xs" />
+          <ProvenanceTag type="modelled" size="xs" />
         </div>
 
         <div className="w-full h-80">

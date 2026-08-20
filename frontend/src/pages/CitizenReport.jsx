@@ -19,32 +19,6 @@ import {
   FileText
 } from 'lucide-react';
 
-const LOCATION_PRESETS = [
-  { 
-    label: 'Okhla Industrial Area, Phase II', 
-    city: 'Delhi', 
-    lat: 28.5355, 
-    lng: 77.2690, 
-    badge: '🏭 Industrial Waste Burning (Delhi)',
-    sampleText: 'Massive thick black smoke plume billowing from waste processing area. Acrid plastic burning smell.'
-  },
-  { 
-    label: 'Majha Agricultural Corridor, Amritsar', 
-    city: 'Punjab', 
-    lat: 31.6340, 
-    lng: 74.8723, 
-    badge: '🌾 Stubble Burning Plume (Punjab)',
-    sampleText: 'Extensive agricultural stubble fires across farmland. Thick white-grey smoke drifting westwards across border.'
-  },
-  { 
-    label: 'Paulista Avenue Transit Corridor', 
-    city: 'São Paulo', 
-    lat: -23.5610, 
-    lng: -46.6560, 
-    badge: '🚚 Freight Congestion (São Paulo)',
-    sampleText: 'Dense diesel exhaust and vehicle idling haze along highway freight transit corridor.'
-  }
-];
 
 export default function CitizenReport() {
   const { t, language, navigateTo, setLastSubmittedReport, refreshData } = useApp();
@@ -53,10 +27,10 @@ export default function CitizenReport() {
   
   // Canonical Location State Model
   const [locationState, setLocationState] = useState({
-    label: 'Okhla Industrial Area, Phase II',
-    latitude: 28.5355,
-    longitude: 77.2690,
-    source: 'preset', // 'gps' | 'geocoded' | 'manual' | 'preset'
+    label: '',
+    latitude: '',
+    longitude: '',
+    source: 'manual', // 'gps' | 'geocoded' | 'manual' | 'preset'
     accuracy: null,
     isGeocoding: false,
     error: null
@@ -139,19 +113,6 @@ export default function CitizenReport() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // Sample quick preset templates
-  const applyPreset = (preset) => {
-    setDescription(preset.sampleText);
-    setLocationState({
-      label: preset.label,
-      latitude: preset.lat,
-      longitude: preset.lng,
-      source: 'preset',
-      accuracy: null,
-      isGeocoding: false,
-      error: null
-    });
-  };
 
   // Detect GPS & Reverse Geocode
   const handleDetectLocation = () => {
@@ -310,24 +271,6 @@ export default function CitizenReport() {
         </button>
       </div>
 
-      {/* Demonstration Presets */}
-      <div className="bg-surface p-3.5 rounded-card border border-slate-200 space-y-2">
-        <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide">
-          Quick Incident Presets:
-        </span>
-        <div className="flex flex-wrap gap-2 text-xs">
-          {LOCATION_PRESETS.map((preset, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => applyPreset(preset)}
-              className="px-3 py-1.5 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-ink text-left transition-colors font-medium shadow-xs"
-            >
-              {preset.badge}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Submission Form */}
       <form onSubmit={handleSubmit} className="card-surface p-6 sm:p-8 space-y-6">

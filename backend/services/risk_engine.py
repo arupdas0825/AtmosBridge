@@ -68,10 +68,13 @@ class RiskEngine:
         country = self._infer_country(lat, lon)
         city = self._infer_city(lat, lon, location_name)
         
-        # Affected population estimate based on urban density heuristic
-        pop_density_factor = 12000  # people / km2
-        radius_km = 1.0 + (num_severity * 0.75)
-        affected_pop = int(3.14159 * (radius_km ** 2) * pop_density_factor * (risk_score / 100.0))
+        # Rough indicative population exposure estimate based on urban density heuristics.
+        # NOTE: This is a ROUGH INDICATIVE ESTIMATE — not a verified measurement.
+        # Based on a simplified radial exposure model (severity-scaled radius × average urban density).
+        # Actual exposure depends on local population density, building height, and dispersion.
+        pop_density_factor = 8000  # people / km² (conservative urban average)
+        radius_km = 0.5 + (num_severity * 0.5)  # conservative radii: 1.0, 1.5, 2.0, 2.5 km
+        affected_pop_estimate = int(3.14159 * (radius_km ** 2) * pop_density_factor * (risk_score / 100.0))
 
         # Check cross-border proximity (within 100km of borders)
         is_cross_border = self._check_cross_border_proximity(lat, lon)
@@ -121,7 +124,7 @@ class RiskEngine:
                 "status": "active" if num_severity >= 3 else "investigating",
                 "pollutants": pollutants,
                 "weather": weather_data if weather_data.get("is_live") else None,
-                "affected_population_estimate": affected_pop,
+                "affected_population_estimate": affected_pop_estimate,
                 "cross_border_risk": is_cross_border,
                 "reports_count": 1,
                 "first_detected": now_iso,
@@ -144,7 +147,7 @@ class RiskEngine:
                 "risk_score": risk_score,
                 "status": "pending",
                 "created_at": now_iso,
-                "affected_population": affected_pop,
+                "affected_population": affected_pop_estimate,
                 "gemini_summary": gemini_analysis.get("explanation", "Visual sighting matched with elevated ground telemetry."),
                 "recommended_intervention": "\n".join([f"• {step}" for step in gemini_analysis.get("recommended_verification", ["Dispatch municipal inspector"])]) or "Deploy inspection unit immediately.",
                 "action_log": [],

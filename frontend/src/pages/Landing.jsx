@@ -81,9 +81,9 @@ export default function Landing() {
           <div className="pt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-ink-muted">
             <span className="text-[11px] font-medium text-slate-500">Data Provenance:</span>
             <ProvenanceTag type="observed" size="xs" />
+            <ProvenanceTag type="modelled" size="xs" />
             <ProvenanceTag type="inferred" size="xs" />
             <ProvenanceTag type="predicted" size="xs" />
-            <ProvenanceTag type="simulated" size="xs" />
           </div>
 
         </div>

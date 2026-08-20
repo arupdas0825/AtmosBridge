@@ -290,11 +290,11 @@ export default function EventDetails() {
             </div>
 
             <div className="bg-surface p-3 rounded-card border border-slate-200/80">
-              <span className="text-[11px] font-semibold text-ink-muted block">Estimated Impacted Pop.</span>
+              <span className="text-[11px] font-semibold text-ink-muted block">Pop. Exposure Est. <span className="font-normal text-[10px]">(indicative)</span></span>
               <div className="text-lg font-bold font-mono text-ink">
-                {hotspot.affected_population_estimate?.toLocaleString() || 'Localized'}
+                {hotspot.affected_population_estimate?.toLocaleString() || '—'}
               </div>
-              <span className="text-[10px] text-ink-muted block mt-0.5">Dispersion footprint</span>
+              <span className="text-[10px] text-ink-muted block mt-0.5">Rough radial heuristic — not verified census data</span>
             </div>
           </div>
         </div>
