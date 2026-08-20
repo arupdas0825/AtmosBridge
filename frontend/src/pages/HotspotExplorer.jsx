@@ -168,15 +168,25 @@ export default function HotspotExplorer() {
       <div className="card-surface p-4 flex flex-wrap items-center justify-between gap-3">
         
         {/* Search Bar */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search className="w-4 h-4 text-ink-muted absolute left-3 top-3" />
+        <div className="relative flex-1 min-w-[260px] flex items-center">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by location, event type, or keyword..."
-            className="input-control text-xs pl-9"
+            className="input-control text-xs !pl-10 pr-8 py-2 w-full placeholder:text-slate-400"
+            style={{ paddingLeft: '2.5rem' }}
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-ink font-semibold px-1"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
         </div>
 
         <div className="flex items-center flex-wrap gap-2 text-xs">
