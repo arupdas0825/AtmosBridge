@@ -163,15 +163,11 @@ export default function Navbar() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
               </div>
               
-              <div className="flex flex-col">
+              <div className="flex items-center">
                 <span className={`font-extrabold text-lg tracking-tight leading-none group-hover:text-brand transition-colors ${
                   isAuthority ? 'text-white' : 'text-ink'
                 }`}>
                   AtmosBridge
-                </span>
-                <span className="text-[10px] font-mono font-medium tracking-wider uppercase text-teal-700 flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{isAuthority ? 'Authority Core' : 'Climate AI'}</span>
                 </span>
               </div>
             </div>
@@ -190,9 +186,9 @@ export default function Navbar() {
                       onClick={() => handleNavClick(item.id)}
                       variant={isAuthority ? "secondary" : "primary"}
                       size="default"
-                      className={`font-bold shadow-md ${
+                      className={`font-bold ${
                         isAuthority 
-                          ? 'border border-teal-400/40 text-teal-300 bg-teal-950/70 hover:bg-teal-900/80' 
+                          ? 'text-teal-300 bg-teal-950 hover:bg-teal-900' 
                           : 'bg-brand hover:bg-brand-dark text-white'
                       }`}
                     >
