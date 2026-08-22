@@ -1,4 +1,7 @@
 <div align="center">
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:0A4247,100:1C7293&height=150&section=header&animation=fadeIn" alt="banner"/>
+
 <img width="120" height="120" alt="logo" src="https://github.com/user-attachments/assets/c894a42f-20ec-4f29-99ea-0984f921ed75" />
 
 # AtmosBridge
@@ -8,14 +11,32 @@
 *Hack2Skill × Google Cloud — "Build with AI: Code for Communities" (2nd Edition)*
 **Track 2 — Clean Air & Climate Resilience** · BRICS Sustainability Theme
 
+<img src="https://readme-typing-svg.demolab.com/?font=Fira+Code&weight=500&size=20&duration=2500&pause=1200&color=0E5C63&center=true&vCenter=true&width=780&lines=Detecting+pollution+city-wide+monitors+miss...;Citizen+reports+%2B+Gemini+AI+%2B+cross-border+forecasting;Human-in-the-loop+%E2%80%94+zero+automated+enforcement;Built+for+Hack2Skill+%C3%97+Google+Cloud" alt="typing banner" />
+
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 ![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite%20(JS%2FJSX)-61DAFB)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
 ![AI](https://img.shields.io/badge/AI-Google%20Gemini-8E75FF)
 
-[Live Prototype](https://atmosbridgeai.vercel.app/) · [Submission Checklist](./docs/HACK2SKILL-SUBMISSION-CHECKLIST.md) · [Documentation](./docs)
+[**Live Prototype**](https://atmosbridgeai.vercel.app/) · [**Demo Video**](https://drive.google.com/drive/folders/1024GlftmbLgjhkVkC2S7pkaqR8z_jlJ_?usp=drive_link) · [**Screenshots (Wiki)**](../../wiki) · [Submission Checklist](./docs/HACK2SKILL-SUBMISSION-CHECKLIST.md) · [Documentation](./docs)
 
 </div>
+
+---
+
+## 📖 Table of Contents
+
+- [Executive Summary](#-executive-summary)
+- [The 16-Screen Experience](#-the-16-screen-experience)
+- [Architecture & Stack](#️-architecture--stack)
+- [Quickstart](#️-quickstart)
+- [Environment Variables](#-environment-variables)
+- [Security](#-security)
+- [Responsible AI & Data Provenance](#️-responsible-ai--data-provenance)
+- [Known Limitations & Truthfulness](#️-known-limitations--truthfulness)
+- [Repository Structure](#-repository-structure)
+- [License](#-license)
+- [Author & Contributor](#-author--contributor)
 
 ---
 
@@ -32,7 +53,7 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 
 **Google Gemini** performs multimodal reasoning to structure citizen sightings into actionable incident data rather than inventing readings. A **physics-grounded atmospheric risk predictor** (ventilation, boundary-layer inversion, and stagnation modeling) forecasts 6h/12h/24h spike risk. Together they surface hyperlocal hotspots, model cross-border atmospheric drift, and route actionable alerts to municipal authorities — with human-in-the-loop governance and zero automated punitive action.
 
-> **2–3 line pitch:** AtmosBridge is a federated, AI-powered climate intelligence platform that fuses citizen-reported pollution sightings, ground sensors, satellite indicators, and weather data to detect hyperlocal pollution hotspots city-level AQI monitors miss. Gemini structures multimodal citizen reports into explainable risk assessments; a prediction layer forecasts spikes and models cross-border smog movement between BRICS regions, routing high-confidence alerts to authorities for rapid, human-approved intervention.
+> **In plain terms:** city-wide AQI averages hide the pollution events that actually hurt people — a field burning three streets away, a factory discharging at night, smog drifting in from across a border. AtmosBridge fuses what citizens report, what sensors and satellites pick up, and what weather patterns suggest, and lets Gemini make sense of it together. Instead of a dashboard full of disconnected numbers, it surfaces where pollution is concentrated, where it's likely headed, and what needs attention — while a human authority always makes the final call.
 
 ---
 
@@ -56,6 +77,8 @@ Major cities and border regions across the BRICS nations — India, Brazil, Russ
 | 14 | Data Sources & Provenance | Transparency | Provenance registry — Observed / Inferred / Predicted / Simulated |
 | 15 | Settings & Localization | Accessibility | Language switch (English, हिन्दी, Português, Русский, 中文), preferences |
 | 16 | About & Responsible AI | Compliance | Responsible-AI principles, non-diagnostic disclaimer, audit architecture |
+
+📸 **See it in action:** full-resolution screenshots of every screen are on the [project Wiki](../../wiki), and the [demo video](https://drive.google.com/drive/folders/1024GlftmbLgjhkVkC2S7pkaqR8z_jlJ_?usp=drive_link) walks through the complete citizen-report-to-authority-alert journey.
 
 ---
 
@@ -113,6 +136,9 @@ Open `http://localhost:5173`.
 ```bash
 npm run build   # runs frontend install + build, per root package.json
 ```
+
+### Try it live
+No local setup needed — the deployed prototype is at **[atmosbridgeai.vercel.app](https://atmosbridgeai.vercel.app/)**.
 
 ---
 
@@ -183,11 +209,12 @@ Full details on project scope & limitations: [`docs/limitations.md`](./docs/limi
 ## 📁 Repository Structure
 
 ```
-atmosbridge/
+AtmosBridge/
   LICENSE
   README.md
   .env.example
   .gitignore
+  .vercelignore
   vercel.json
   Dockerfile
   package.json          Root build script (delegates to frontend/)
@@ -195,12 +222,15 @@ atmosbridge/
   api/                  Vercel serverless entrypoint (api/index.py)
   backend/              FastAPI application (routers/ services/ models/ data/)
   frontend/             React + Vite SPA (pure JS/JSX, Tailwind CSS, Recharts)
-  screenshots/          Presentation screenshots catalog guide
+  screenshots/          Reserved locally — full screenshot catalog lives on the project Wiki
   scripts/              seed_data.py  train_model.py  security_check.py  pre_commit_check.py
   tests/                test_all_endpoints.py  test_e2e_flow.py
-  docs/                 PRD, architecture, design, API reference, data sources,
-                        limitations, responsible AI, pitch deck, demo script, submission checklist
+  docs/                 prd.md  architecture.md  design.md  api.md  data-sources.md
+                        limitations.md  responsible-ai.md  pitch-deck.md  demo-script.md
+                        HACK2SKILL-SUBMISSION-CHECKLIST.md
 ```
+
+Screenshots of all 16 screens are maintained on the [GitHub Wiki](../../wiki) rather than committed as binary files in this repo. The submission demo video is linked at the top of this README.
 
 ---
 
@@ -222,3 +252,11 @@ B.Tech CSE (AI/ML), Brainware University, Kolkata
 **Aditya Bar** (Contributor)
 B.Tech CSE (AI/ML), Brainware University, Kolkata
 - GitHub: [@adityabar07](https://github.com/adityabar07)
+
+<div align="center">
+
+[⬆ Back to top](#atmosbridge)
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:1C7293,100:0A4247&height=110&section=footer&animation=fadeIn" alt="footer banner"/>
+
+</div>
