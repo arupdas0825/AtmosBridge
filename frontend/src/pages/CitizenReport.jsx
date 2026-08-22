@@ -3,6 +3,11 @@ import { useApp } from '../state/AppContext';
 import { submitReport } from '../lib/api';
 import ProvenanceTag from '../components/common/ProvenanceTag';
 import { 
+  optimizeImage, 
+  formatBytes, 
+  isImageSupported 
+} from '../utils/imageOptimizer';
+import { 
   Camera, 
   MapPin, 
   Upload, 
@@ -16,9 +21,10 @@ import {
   X,
   RefreshCw,
   Trash2,
-  FileText
+  FileText,
+  Zap,
+  Check
 } from 'lucide-react';
-
 
 export default function CitizenReport() {
   const { t, language, navigateTo, setLastSubmittedReport, refreshData } = useApp();
@@ -40,32 +46,65 @@ export default function CitizenReport() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoSource, setPhotoSource] = useState('upload'); // 'camera' | 'upload'
+  const [optimizationStats, setOptimizationStats] = useState(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStage, setSubmissionStage] = useState('idle'); // 'idle' | 'uploading' | 'analyzing' | 'error'
   const [errorMessage, setErrorMessage] = useState('');
 
   // Hidden File Inputs
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // File Validation and Processing
-  const processSelectedFile = (file, source = 'upload') => {
-    if (!file) return;
+  // File Validation and Client-Side Optimization
+  const processSelectedFile = async (rawFile, source = 'upload') => {
+    if (!rawFile) return;
 
-    if (!file.type.startsWith('image/')) {
-      setErrorMessage('Please select a valid image file (JPEG, PNG, WebP).');
+    if (!isImageSupported(rawFile)) {
+      setErrorMessage('Unsupported file format. Please upload a valid JPEG, PNG, or WebP image.');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('Photo exceeds maximum 5MB size limit.');
+    if (rawFile.size > 15 * 1024 * 1024) {
+      setErrorMessage('Photo exceeds maximum 15 MB source size limit. Please choose a smaller photo.');
       return;
     }
 
-    setPhotoFile(file);
-    setPhotoSource(source);
-    setPhotoPreview(URL.createObjectURL(file));
     setErrorMessage('');
+    setIsOptimizing(true);
+
+    try {
+      // Optimise oversized photo on client side before upload (< 1.2 MB guarantee)
+      const optimized = await optimizeImage(rawFile, {
+        maxDimension: 1920,
+        quality: 0.82,
+        maxUploadBytes: 1.2 * 1024 * 1024
+      });
+
+      setPhotoFile(optimized.file);
+      setOptimizationStats(optimized);
+      setPhotoSource(source);
+      setPhotoPreview(URL.createObjectURL(optimized.file));
+    } catch (optErr) {
+      console.warn('[Image Optimizer Warning]', optErr);
+      // If optimization fails, fallback to raw file if under 1.5MB
+      if (rawFile.size <= 1.5 * 1024 * 1024) {
+        setPhotoFile(rawFile);
+        setPhotoPreview(URL.createObjectURL(rawFile));
+        setOptimizationStats({
+          originalSize: rawFile.size,
+          optimizedSize: rawFile.size,
+          compressionRatio: 0,
+          width: 'Original',
+          height: ''
+        });
+      } else {
+        setErrorMessage(optErr.message || 'Unable to optimize the selected photo. Please select another image.');
+      }
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   const handleFileChange = (e, source = 'upload') => {
@@ -101,18 +140,10 @@ export default function CitizenReport() {
   const handleRemovePhoto = () => {
     setPhotoFile(null);
     setPhotoPreview(null);
+    setOptimizationStats(null);
     if (cameraInputRef.current) cameraInputRef.current.value = '';
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
-
-  const formatFileSize = (bytes) => {
-    if (!bytes) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
 
   // Detect GPS & Reverse Geocode
   const handleDetectLocation = () => {
@@ -191,9 +222,14 @@ export default function CitizenReport() {
     return null;
   };
 
-  // Submit Report
+  // Submit Report with multi-stage progress
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isOptimizing) {
+      setErrorMessage('Please wait a moment while the photo finishes optimizing.');
+      return;
+    }
+
     const validationError = validateForm();
     if (validationError) {
       setErrorMessage(validationError);
@@ -201,35 +237,56 @@ export default function CitizenReport() {
     }
 
     setIsSubmitting(true);
+    setSubmissionStage('uploading');
     setErrorMessage('');
 
     try {
-      const effectiveDesc = description.trim() || (photoFile ? 'Pollution sighting photo evidence attached.' : '');
+      let finalPhotoFile = photoFile;
+      // Pre-submission transport safety check: guarantee payload is strictly under 1.2 MB
+      if (finalPhotoFile && finalPhotoFile.size > 1.2 * 1024 * 1024) {
+        try {
+          const reOpt = await optimizeImage(finalPhotoFile, {
+            maxDimension: 1440,
+            quality: 0.70,
+            maxUploadBytes: 1.0 * 1024 * 1024
+          });
+          finalPhotoFile = reOpt.file;
+        } catch (reErr) {
+          console.warn('[Pre-submit compression fallback]', reErr);
+        }
+      }
+
+      const effectiveDesc = description.trim() || (finalPhotoFile ? 'Pollution sighting photo evidence attached.' : '');
       const formData = new FormData();
       formData.append('description', effectiveDesc);
       formData.append('latitude', locationState.latitude.toString());
       formData.append('longitude', locationState.longitude.toString());
       formData.append('location_name', locationState.label || `Coords (${locationState.latitude}, ${locationState.longitude})`);
       formData.append('language', language);
-      if (photoFile) {
-        formData.append('photo', photoFile);
+      if (finalPhotoFile) {
+        formData.append('photo', finalPhotoFile);
       }
 
+      setSubmissionStage('analyzing');
       const reportResult = await submitReport(formData);
+      setSubmissionStage('idle');
       setLastSubmittedReport(reportResult);
       await refreshData();
       navigateTo('analysis-result', { reportData: reportResult });
     } catch (err) {
       console.error('[CitizenReport Submit Error]', err);
+      setSubmissionStage('error');
       let userMsg = err.message;
-      if (err.name === 'AbortError' || err.message?.includes('aborted') || err.message?.includes('timeout')) {
-        userMsg = 'Unable to reach the analysis service. Please try again.';
+      if (err.status === 413 || err.message?.includes('413') || err.message?.includes('Payload Too Large')) {
+        userMsg = 'Photo is too large to process. Optimising the image and retrying...';
+      } else if (err.name === 'AbortError' || err.message?.includes('aborted') || err.message?.includes('timeout')) {
+        userMsg = 'Unable to reach the analysis service in time. Please check your connection and retry.';
       } else if (err.stage === 'upload' || err.stage === 'validation') {
-        userMsg = err.message || 'Image validation failed. Please upload a JPEG, PNG, or WebP under 5 MB.';
+        userMsg = err.message || 'Photo upload failed. Please retry with a valid image.';
       } else if (err.stage === 'gemini') {
-        userMsg = err.message || 'Gemini analysis is temporarily unavailable.';
+        userMsg = err.message || 'Gemini analysis is temporarily unavailable. Please retry shortly.';
       } else if (!userMsg || userMsg === 'Failed to submit report') {
-        userMsg = 'Unable to submit report right now. Please check your connection and try again.';
+        userMsg = 'Photo upload failed. Please retry.';
       }
       setErrorMessage(userMsg);
     } finally {
@@ -283,7 +340,6 @@ export default function CitizenReport() {
         </button>
       </div>
 
-
       {/* Submission Form */}
       <form onSubmit={handleSubmit} className="card-surface p-6 sm:p-8 space-y-6">
         
@@ -297,43 +353,73 @@ export default function CitizenReport() {
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
             placeholder={t.inputDescPlaceholder || 'Describe what you observe: smoke color, odor, estimated source, wind direction...'}
-            required
+            required={!photoFile}
             className="input-control text-sm placeholder:text-slate-400"
           />
         </div>
 
-        {/* PHOTO EVIDENCE: TWO-OPTION UPLOADER (CAMERA + DRAG & DROP) */}
+        {/* PHOTO EVIDENCE: TWO-OPTION UPLOADER WITH CLIENT-SIDE OPTIMIZATION */}
         <div className="space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <label className="block text-xs font-bold text-ink uppercase tracking-wider">
-              {t.photoUploadTitle || 'Photo Evidence'}
+            <label className="block text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+              <Camera className="w-3.5 h-3.5 text-brand" />
+              <span>{t.photoUploadTitle || 'Photo Evidence'}</span>
             </label>
-            <span className="text-[11px] text-ink-muted">JPEG, PNG, WebP (Max 5MB)</span>
+            <span className="text-[11px] text-ink-muted font-medium">
+              JPEG, PNG, WebP (Max 15 MB Source • Auto-Optimized)
+            </span>
           </div>
 
-          {photoPreview ? (
+          {/* Optimizing Loading State */}
+          {isOptimizing ? (
+            <div className="p-8 rounded-card border-2 border-dashed border-brand bg-brand-surface/40 flex flex-col items-center justify-center gap-3 text-center animate-pulse">
+              <Loader2 className="w-8 h-8 text-brand animate-spin" />
+              <div className="space-y-1">
+                <div className="text-xs font-bold text-ink">Optimizing Photo for AI Processing...</div>
+                <div className="text-[11px] text-ink-muted">Preserving visual evidence and smoke plume detail</div>
+              </div>
+            </div>
+          ) : photoPreview ? (
             /* Selected Photo Preview Card */
             <div className="rounded-card border border-slate-200 overflow-hidden bg-slate-900 shadow-sm space-y-0">
-              <div className="relative max-h-64 bg-black flex items-center justify-center overflow-hidden">
+              <div className="relative max-h-72 bg-black flex items-center justify-center overflow-hidden group">
                 <img 
                   src={photoPreview} 
                   alt="Incident Preview" 
-                  className="max-h-64 w-full object-contain"
+                  className="max-h-72 w-full object-contain"
                 />
+                <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold flex items-center gap-1 backdrop-blur-xs shadow-xs">
+                    <Check className="w-3 h-3" />
+                    <span>Evidence Ready</span>
+                  </span>
+                </div>
               </div>
 
               {/* Photo Details & Action Bar */}
-              <div className="p-3 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="space-y-0.5 min-w-[140px]">
+              <div className="p-3.5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="space-y-1 min-w-[160px]">
                   <div className="font-semibold text-ink truncate max-w-xs flex items-center gap-1.5">
                     <span className="text-brand">●</span>
-                    <span className="truncate">{photoFile?.name || 'Captured Photo'}</span>
+                    <span className="truncate">{photoFile?.name || 'Evidence Photo'}</span>
                   </div>
-                  <div className="text-[11px] text-ink-muted flex items-center gap-2 font-mono">
-                    <span>{formatFileSize(photoFile?.size)}</span>
-                    <span>•</span>
-                    <span className="capitalize font-sans bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded text-[10px]">
-                      {photoSource === 'camera' ? '📷 Camera Capture' : '📁 File Upload'}
+                  
+                  {/* File Size & Optimization Metrics */}
+                  <div className="flex items-center flex-wrap gap-2 text-[11px] font-mono text-ink-muted">
+                    {optimizationStats?.originalSize && optimizationStats.originalSize !== optimizationStats.optimizedSize ? (
+                      <div className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200 text-[10px]">
+                        <Zap className="w-3 h-3 text-emerald-600" />
+                        <span className="line-through text-slate-400">{formatBytes(optimizationStats.originalSize)}</span>
+                        <span>→</span>
+                        <span className="font-bold">{formatBytes(optimizationStats.optimizedSize)}</span>
+                        <span className="text-emerald-700 font-bold">(-{optimizationStats.compressionRatio}%)</span>
+                      </div>
+                    ) : (
+                      <span>{formatBytes(photoFile?.size)}</span>
+                    )}
+
+                    <span className="capitalize font-sans bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[10px]">
+                      {photoSource === 'camera' ? '📷 Camera' : '📁 Upload'}
                     </span>
                   </div>
                 </div>
@@ -342,9 +428,9 @@ export default function CitizenReport() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                    className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1 hover:border-brand"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
+                    <RefreshCw className="w-3.5 h-3.5 text-brand" />
                     <span>Replace</span>
                   </button>
                   <button
@@ -414,13 +500,13 @@ export default function CitizenReport() {
                 <div className="text-xs font-semibold text-ink">
                   {isDragging ? 'Drop photo here to attach' : 'Drag & drop photo here or click to browse'}
                 </div>
-                <div className="text-[11px] text-ink-muted">Supports JPEG, PNG, or WebP up to 5MB</div>
+                <div className="text-[11px] text-ink-muted">Supports JPEG, PNG, or WebP up to 10 MB</div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Clean, Non-Overlapping Location Section */}
+        {/* Clean Location Section */}
         <div className="space-y-4 pt-2 border-t border-slate-100">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
@@ -512,30 +598,46 @@ export default function CitizenReport() {
           </div>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Alert with Retry Guidance */}
         {errorMessage && (
-          <div className="p-3 bg-red-50 border border-red-200 text-risk-critical rounded-md text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{errorMessage}</span>
+          <div className="p-3 bg-red-50 border border-red-200 text-risk-critical rounded-md text-xs flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-semibold">{errorMessage}</span>
+              {errorMessage.includes('retry') && (
+                <div className="text-[11px] text-red-600">
+                  Tip: If the problem persists, try taking a photo directly with your camera or submitting a brief text description.
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="btn-primary w-full text-sm py-3 font-semibold shadow-md shadow-brand/20"
+          disabled={isSubmitting || isOptimizing}
+          className="btn-primary w-full text-sm py-3 font-semibold shadow-md shadow-brand/20 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
-            <>
+            <div className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>{t.submittingReport || 'Gemini is analyzing evidence...'}</span>
-            </>
+              <span>
+                {submissionStage === 'analyzing'
+                  ? 'Gemini AI is analyzing evidence...'
+                  : 'Uploading evidence...'}
+              </span>
+            </div>
+          ) : isOptimizing ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Optimizing photo...</span>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center justify-center gap-2">
               <Sparkles className="w-4 h-4" />
               <span>{t.btnSubmitReport || 'Analyze with Gemini AI'}</span>
-            </>
+            </div>
           )}
         </button>
 

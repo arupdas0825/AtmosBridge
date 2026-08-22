@@ -123,12 +123,12 @@ async def create_report(
                 }
             )
 
-        if len(image_bytes) > 5 * 1024 * 1024:
+        if len(image_bytes) > 10 * 1024 * 1024:
             return JSONResponse(
                 status_code=400,
                 content={
                     "success": False,
-                    "error": "Image file exceeds maximum 5 MB size limit.",
+                    "error": "Image file exceeds maximum 10 MB size limit.",
                     "stage": "upload"
                 }
             )

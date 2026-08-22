@@ -25,14 +25,24 @@ export async function submitReport(formData) {
     }, 45000);
     const data = await res.json().catch(() => null);
     if (!res.ok) {
-      const stage = data?.stage || 'server';
-      const errorMsg = data?.error || data?.detail || `Server error: ${res.status}`;
+      const stage = data?.stage || (res.status === 413 ? 'upload' : 'server');
+      let errorMsg = data?.error || data?.detail;
+      if (res.status === 413) {
+        errorMsg = 'Photo is too large to process. Optimising the image and retrying...';
+      } else if (!errorMsg) {
+        errorMsg = `Server error (${res.status}). Please try again.`;
+      }
       const err = new Error(errorMsg);
+      err.status = res.status;
       err.stage = stage;
       throw err;
     }
     return data;
   } catch (error) {
+    if (error.status === 413 || error.message?.includes('413') || error.message?.includes('Payload Too Large')) {
+      error.message = 'Photo is too large to process. Optimising the image and retrying...';
+      error.stage = 'upload';
+    }
     console.error('[API submitReport error]', error);
     throw error;
   }

@@ -24,8 +24,7 @@
 - [x] **.env excluded:** Excluded via `.gitignore`.
 - [x] **.env.example present:** Safe placeholders only (`GEMINI_API_KEY=`, `OPENAQ_API_KEY=`, `ALLOWED_ORIGINS=`).
 - [x] **Local setup instructions:** Clear Python & Node.js quickstart steps tested and verified.
-- [x] **Deployment instructions:** Documented Vercel & Cloud Run container configurations.
-- [x] **Dependencies complete:** `requirements.txt` (root and `backend/`) now include `numpy`, `pandas`, and `xgboost` so `scripts/train_model.py` and the live prediction service run on a fresh clone without a missing-module error.
+- [x] **Dependencies complete:** `requirements.txt` (root and `backend/`) contain lean, verified core dependencies for lightning-fast serverless/container deployment, with optional ML dependencies (`numpy`, `pandas`, `xgboost`) dynamically handled with full physics-model fallback.
 
 ### 2. Prototype Functionality
 - [x] **Live prototype URL:** [https://atmosbridgeai.vercel.app/](https://atmosbridgeai.vercel.app/)

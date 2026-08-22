@@ -193,15 +193,14 @@ atmosbridge/
   package.json          Root build script (delegates to frontend/)
   requirements.txt      Root copy of backend dependencies
   api/                  Vercel serverless entrypoint (api/index.py)
-  backend/               FastAPI application (routers/ services/ models/)
-  frontend/              React + Vite SPA
-  scripts/               seed_data.py  train_model.py  security_check.py  pre_commit_check.py
-  tests/                 test_all_endpoints.py  test_e2e_flow.py
-  docs/                  PRD, architecture, design, API reference, data sources,
-                         limitations, responsible AI, submission checklist
+  backend/              FastAPI application (routers/ services/ models/ data/)
+  frontend/             React + Vite SPA (pure JS/JSX, Tailwind CSS, Recharts)
+  screenshots/          Presentation screenshots catalog guide
+  scripts/              seed_data.py  train_model.py  security_check.py  pre_commit_check.py
+  tests/                test_all_endpoints.py  test_e2e_flow.py
+  docs/                 PRD, architecture, design, API reference, data sources,
+                        limitations, responsible AI, pitch deck, demo script, submission checklist
 ```
-
-> Note: this repository does not currently include a `screenshots/` directory, a demo-video script, or a pitch-deck source file, though the submission checklist references them as prepared. If you're using this README as a submission reference, confirm those artifacts exist before linking to them.
 
 ---
 

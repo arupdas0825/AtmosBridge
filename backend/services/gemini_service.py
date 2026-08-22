@@ -1,15 +1,43 @@
 import json
 import base64
 import os
+import io
 import time
 import requests
 import logging
 from typing import Dict, Any, Optional, List
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
 from backend.config import settings
 from backend.models.schemas import GeminiAnalysisResult
 from backend.services.data_service import data_service
 
 logger = logging.getLogger(__name__)
+
+def optimize_image_for_gemini(image_bytes: bytes, max_dim: int = 1920, quality: int = 82) -> tuple[bytes, str]:
+    """Ensures image payload is within reasonable dimensions and size before sending to Gemini API."""
+    if not image_bytes:
+        return image_bytes, "image/jpeg"
+    if Image is None:
+        return image_bytes, "image/jpeg"
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as img:
+            mime = "image/jpeg"
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+            w, h = img.size
+            if w > max_dim or h > max_dim or len(image_bytes) > 1.5 * 1024 * 1024:
+                img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+                out_buf = io.BytesIO()
+                img.save(out_buf, format="JPEG", quality=quality, optimize=True)
+                return out_buf.getvalue(), mime
+            return image_bytes, mime
+    except Exception as e:
+        logger.warning(f"[GeminiService Image Optimization Warning] {e}")
+        return image_bytes, "image/jpeg"
 
 class GeminiUnavailableError(Exception):
     """Raised when Gemini API is unreachable, unconfigured, or fails all candidate models."""
@@ -57,6 +85,10 @@ class GeminiService:
         if not self.api_key:
             logger.warning("[GeminiService] GEMINI_API_KEY is not configured.")
             raise GeminiUnavailableError("Gemini API key is not configured on the server.")
+
+        # Optimize image bytes before encoding
+        if image_bytes:
+            image_bytes, image_mime_type = optimize_image_for_gemini(image_bytes)
 
         # Step 1: Execute backend tools to gather ground-truth environmental context
         aqi_data = {}
